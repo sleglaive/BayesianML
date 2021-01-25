@@ -217,6 +217,7 @@ Key concepts you should be familiar with at the end of this lecture:
 Material:
 
 - [Slides](https://sleglaive.pages.centralesupelec.fr/page/bayesian-ML/session6/slides.html)
+- [Notebook - Variational inference for the Gaussian model with latent parameters](python/VI%20for%20Gaussian%20model%20with%20latent%20mean%20and%20precision%20(solution).ipynb)
 - [Demo mean field variational inference](session6/demo-MF-VI.pdf)
 - [Solution to exercices](session6/solution_exercises.pdf)
 
