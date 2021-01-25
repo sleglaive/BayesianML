@@ -222,7 +222,7 @@ Material:
 
 ## Bayesian linear regression
 
-In the second lecture, we already discussed about linear regression (polynomial regression) and we have seen that with a standard maximum likelihood approach, we have to carefully choose the degree of the polynomial model, in order not to overfit the training data. In Bayesian linear regression, a prior is consider for the weights, which acts as a regularizer and prevents overfitting. Moreover, this Bayesian approach to linear regression naturally provides a measure of uncertainty along with the prediction.
+We already discussed about linear regression (polynomial regression) in the second lecture, and we saw that with a standard maximum likelihood approach, we have to carefully choose the degree of the polynomial model in order not to overfit the training data. In Bayesian linear regression, a prior distribution is considered for the weights, which acts as a regularizer and prevents overfitting. Moreover, this Bayesian approach to linear regression naturally provides a measure of uncertainty along with the prediction.
 
 Material:
 
@@ -245,7 +245,7 @@ Material:
 
 ## Sparse Bayesian linear regression
 
-This practical session is a follow-up of the previous one on Bayesial linear regression. We complexify the prior for the linear regression weights so that exact posterior inference is now intractable and a variational approach has to be developed.
+This practical session is a follow-up of the previous one on Bayesian linear regression. We complexify the prior for the linear regression weights so that exact posterior inference is now intractable and a variational approach has to be developed.
 
 Material:
 
