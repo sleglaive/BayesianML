@@ -34,7 +34,7 @@ Other useful references are:
 
 After each practical session, you should submit a report (in the form of a Jupyter notebook) with both theoretical and practical outcomes. The evaluation of these reports represents 30% of the final grade. The remaining 70% correspond to a final exam.
 
-The exam is scheduled on Thursday, January 28, 9:30-11:30 (2 hours). All documents will be forbidden, but don't worry, if you need formulas such as the probability density functions of common distributions, it will be provided in an appendix.
+The exam is scheduled on Thursday, January 28, 9:30-11:30. All documents will be forbidden, but don't worry, if you need formulas such as the probability density functions of common distributions, it will be provided in an appendix.
 
 ### Anaconda install instructions
 
@@ -115,7 +115,7 @@ If you have troubles installing Anaconda, which is very unlikely as it is super 
 <td>Revision and other activities</td>
 </tr>
 <tr>
-<td>January 25</td>
+<td>January 28</td>
 <td>9:30-11:30</td>
 <td>Exam</td>
 <td><br></td>
@@ -236,8 +236,8 @@ Key concepts you should be familiar with at the end of this lecture:
 
 - The Monte Carlo method to approximate expectations
 - Sampling methods (inverse transform sampling, change of variable, rejection sampling, importance sampling)
-- Definition of Markov chains (will not be at the exam)
-- Markov chain Monte Carlo methods (will not be at the exam)
+- Definition of Markov chains
+- Markov chain Monte Carlo methods
 
 Material:
 
