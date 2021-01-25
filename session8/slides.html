@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bayesian Methods for Machine Learning</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <link rel="stylesheet" href="../assets/katex.min.css">
+  <link rel="stylesheet" type="text/css" href="../assets/slides.css">
+  <link rel="stylesheet" type="text/css" href="../assets/grid.css">
+<!-- Change equation font color defined in ../assests/slides.css -->
+<script type="text/javascript">
+  document.documentElement.style
+  .setProperty('--eq_font_color', '#004c86');
+</script>
+</head>
+<body>
+
+<textarea id="source">
+
+class: center, middle
+
+<br/>
+# Bayesian Methods for Machine Learning
+
+.small-vspace[
+
+]
+
+### Lecture 6 - Markov Chain Monte Carlo
+
+<br/><br/>
+.bold[Simon Leglaive]
+<br/>
+<br/>
+
+<br/><br/>
+.tiny[CentraleSupélec, 2020-2021]
+  
+
+---
+class: middle
+
+Let $\mathbf{x} \in \mathcal{X}$ and $\mathbf{z} \in \mathcal{Z}$ denote the observed and latent random variables, respectively.
+
+In Bayesian methods, it's all about posterior computation:
+
+$$p(\mathbf{z}|\mathbf{x} ; \theta) = \frac{p(\mathbf{x}|\mathbf{z} ; \theta) p(\mathbf{z} ; \theta) }{ p(\mathbf{x} ; \theta)}  = \frac{p(\mathbf{x}|\mathbf{z} ; \theta) p(\mathbf{z} ; \theta)}{\int p(\mathbf{x}|\mathbf{z} ; \theta)p(\mathbf{z} ; \theta) d\mathbf{z}}$$
+
+- Easy to compute for conjugate prior.
+- Hard for many models were conjugacy does not hold.
+
+
+.footnote[For simplicity of notations, we denote the parameters of the likelihood and prior by $\theta$ even though they are generally different.]
+
+---
+class: middle
+
+More precisely, we are very often interested in computing expectations of some function $g$ of the latent variable, taken with respect to the posterior distribution:
+
+$$ \mathbb{E}_{p(\mathbf{z}|\mathbf{x} ; \theta)}[f(\mathbf{z})] = \int f(\mathbf{z}) p(\mathbf{z}|\mathbf{x} ; \theta) d\mathbf{z}.$$
+
+For instance:
+
+- Posterior mean: $ \mathbb{E}_{p(\mathbf{z}|\mathbf{x} ; \theta)}[ \mathbf{z} ] $.
+- Posterior expected loss (see Lecture 1): $\mathcal{L}(\hat{\mathbf{z}}) = \mathbb{E}_{p(\mathbf{z}|\mathbf{x} ; \theta)}[\ell(\hat{\mathbf{z}}, \mathbf{z})]$
+- Predictive posterior distribution (see Lecture 1): $p(\mathbf{x}\_{\text{new}} | \mathbf{x} ; \theta) = \mathbb{E}\_{p(\mathbf{z} | \mathbf{x} ; \theta)}[p(\mathbf{x}\_{\text{new}} | \mathbf{z}  ; \theta\_x )]$
+- E-step of the EM algorithm (see Lecture 3 part 2): $Q(\theta, \theta\_{\text{old}}) = \mathbb{E}\_{ p(\mathbf{z} | \mathbf{x}; \theta\_{\text{old}})} [\ln p(\mathbf{x}, \mathbf{z}; \theta) ]$.
+
+---
+class: middle
+
+We need **approximate inference** techniques when exact posterior computation is infeasible:
+
+- Variational inference 
+- **Markov Chain Monte Carlo** (focus of today)
+
+---
+class: center, middle
+
+## Monte Carlo
+
+---
+class: middle
+
+The Monte Carlo method, first introduced in (Metropolis and Ulam, 1949), is a stochastic approach to computing expectations of functions of random variables.
+
+Let 
+
+- $p: \mathbb{R}^D \mapsto \mathbb{R}_+$ be a probability density function (pdf) over a random vector $\mathbf{x} \in \mathbb{R}^D$,
+- $f: \mathbb{R}^D \mapsto \mathbb{R}$ be an arbitrary function.
+
+The expected value of $f$ over $p$ is defined as:
+
+$$ \mathbb{E}\_{p(\mathbf{x})}[f(\mathbf{x})] = \int\_{\mathbb{R}^D} f(\mathbf{x})p(\mathbf{x}) d\mathbf{x}. $$
+
+---
+class: middle
+
+.grid[
+.kol-2-3[The Monte Carlo method approaches $\mathbb{E}\_{p(\mathbf{x})}[f(\mathbf{x})]$ with a **sample average**:
+
+$$ \mathbb{E}\_{p(\mathbf{x})}[f(\mathbf{x})] \approx \hat{f}\_N = \frac{1}{N} \sum\_{i=1}^N f(\mathbf{x}\_i), \qquad \mathbf{x}\_i \overset{i.i.d}{\sim} p(\mathbf{x}), $$
+
+where $\mathbf{x}\_i \overset{i.i.d}{\sim} p(\mathbf{x})$ means $\mathbf{x}\_i$ is **independently and identically drawn** from $p(\mathbf{x})$.]
+
+.kol-1-3.right[
+
+<video controls autoplay muted width="80%">
+  <source src="images/random_sample.mp4" type="video/mp4">
+</video>
+
+]
+]
+
+.credit[Video credits: https://t.co/x393c5aMAZ?amp=1=]
+
+
+---
+class: middle, center
+
+### Properties of the Monte Carlo estimate
+
+---
+class: middle
+
+- The strong **law of large numbers** (LLN) states that **the sample average converges** almost surely (a.s.) **to the expected value**​:
+
+  $$\hat{f}\_N \overset{\text{a.s.}}{\longrightarrow} \mathbb{E}\_{p(\mathbf{x})}[f(\mathbf{x})] \qquad \text{as } \qquad N \rightarrow + \infty. $$
+
+  Convergence .italic[almost surely] means that:
+
+  $$ Pr\left\\{ \lim\_{N \rightarrow + \infty} \hat{f}\_N = \mathbb{E}\_{p(\mathbf{x})}[f(\mathbf{x})] \right\\} = 1. $$
+
+- Moreover, the estimator is **unbiased**:
+
+ $$ \mathbb{E}\_{p(\mathbf{x})}\left[ \hat{f}\_N \right] = \mathbb{E}\_{p(\mathbf{x})}[f(\mathbf{x})] $$
+
+---
+class: middle
+
+- While fluctuations around the true expectation are inevitable, we wish these fluctuations to be small. 
+
+  This is guaranteed by the **central limit theorem** (CLT).
+
+  For sufficiently large sample size $N$, the fluctuations are approximately Gaussian distributed:
+
+  $$ \hat{f}\_N  \sim \mathcal{N}\left(\mathbb{E}\_{p(\mathbf{x})}[f(\mathbf{x})], \frac{1}{N}\mathbb{V}\_{p(\mathbf{x})}[f(\mathbf{x})]\right), $$
+
+  where $\mathbb{V}\_{p(\mathbf{x})}[f(\mathbf{x})] = \mathbb{E}\_{p(\mathbf{x})}\left[\left( f(\mathbf{x}) - \mathbb{E}\_{p(\mathbf{x})}[f(\mathbf{x})]\right)^2\right].$
+
+  It is important to note that the variance of the Monte Carlo estimate decreases as $\displaystyle \frac{1}{N}$ **independently of the dimensionality of $\mathbf{x}$**.
+
+---
+class: middle
+
+- This last point suggests that, at least in principle, with a reasonable number of samples one can compute approximate solutions for random vectors $\mathbf{x}$ of arbitrary dimension. 
+
+- All we need is **independent and identically distributed** samples. 
+
+- The difficulty with the Monte Carlo approach, however, is precisely in generating independent samples from a target distribution (think of the posterior distribution). 
+
+- Various Monte Carlo methods aim to provide techniques for this.
+
+---
+class: middle, center
+### Importance sampling
+
+---
+class: middle
+
+Two potential reasons for the Monte Carlo method to fail:
+
+- sampling from $p(\mathbf{x})$ is difficult or impossible, 
+- the density $p(\mathbf{x})$ is low for regions where $f(\mathbf{x})$ is high-valued, and vice-versa, so that the terms $f(\mathbf{x}\_i)$ used to build the sample average 
+
+  $$ \hat{f}\_N = \frac{1}{N} \sum\_{i=1}^N f(\mathbf{x}\_i), \qquad \mathbf{x}\_i \overset{i.i.d}{\sim} p(\mathbf{x})$$ 
+ 
+  are most of the time very low. Thus the effective sample size can be much smaller than the apparent sample size $N$.
+
+---
+class: middle
+
+In that cases, we note that:
+
+$$
+\begin{aligned}
+\mathbb{E}\_{p(\mathbf{x})}[f(\mathbf{x})] &= \int\_{\mathbb{R}^D} f(\mathbf{x})p(\mathbf{x}) d\mathbf{x} \\\\
+&= \int\_{\mathbb{R}^D} f(\mathbf{x}) \frac{p(\mathbf{x})}{q(\mathbf{x})} q(\mathbf{x}) d\mathbf{x} \\\\
+&= \mathbb{E}\_{q(\mathbf{x})}\left[ f(\mathbf{x}) \frac{p(\mathbf{x})}{q(\mathbf{x})}  \right],
+\end{aligned}
+$$
+for some arbitrary distribution $q(\mathbf{x})$ such that $q(\mathbf{x}) > 0$ when $ f(\mathbf{x})p(\mathbf{x}) =\not\ 0.$
+
+We can therefore reformulate the approximation as:
+
+$$ \mathbb{E}\_{p(\mathbf{x})}[f(\mathbf{x})] \approx \tilde{f}\_N = \frac{1}{N} \sum\_{i=1}^N f(\mathbf{x}\_i) \frac{p(\mathbf{x}\_i)}{q(\mathbf{x}\_i)}, \qquad \mathbf{x}\_i \overset{i.i.d}{\sim} q(\mathbf{x}). $$
+
+The quantities $p(\mathbf{x}\_i)/q(\mathbf{x}\_i)$ are known as importance weights. This method is called **importance sampling**, and given a careful choice of $q(\mathbf{x})$ can allow easier sampling and help reduce the variance of the estimator.
+
+---
+class: middle, center
+
+### Example: approximating $\pi$ with Monte Carlo
+
+---
+class: middle
+
+Consider a unit square and a circle arc joining two opposite corners of the square.
+
+.center[.width-40[![](images/pi_MC.jpg)]]
+
+The area of a circle with radius 1 is $\pi$, so the area of the quarter circle is $\pi/4$.
+
+---
+class: middle
+
+.grid[
+
+ .kol-1-2[
+    
+  .width-100[![](images/pi_MC.jpg)]
+
+ ]
+ .kol-1-2[
+
+We have
+
+   $$ \frac{\pi}{4} = \int\_{0}^1\int\_{0}^1 f(x,y) dx dy, $$
+
+   with 
+
+   $$ f(x,y) = \begin{cases} 1, & x^2 + y^2 \le 1, \\\\
+   0, & \text{otherwise}. \end{cases} $$
+
+ ]
+]
+
+---
+class: middle
+
+.grid[
+
+ .kol-1-2[
+  
+.width-100[![](images/pi_MC.jpg)]
+
+ ]
+ .kol-1-2[
+
+It can be rewritten as:
+
+   $$
+   \begin{aligned} 
+   \frac{\pi}{4} &= \int\_{-\infty}^{+\infty}\int\_{-\infty}^{+\infty} f(x,y) p(x,y) dx dy 
+   \end{aligned}
+   $$
+
+   with 
+
+   $$ f(x,y) = \begin{cases} 1, & x^2 + y^2 \le 1, \\\\
+   0, & \text{otherwise}. \end{cases} $$
+   
+   and
+   
+   $$ p(x,y) = \begin{cases} 1, & 0 \le x \le 1 \text{ and } 0 \le y \le 1, \\\\
+   0, & \text{otherwise}. \end{cases} $$
+
+ ]
+]
+
+---
+class: middle
+
+The numerical value of $\pi$ can be interpreted as the expected value of $f(\mathbf{x})$ with $\mathbf{x}$ being a **two-dimensional random vector uniformly distributed over the unit square**:
+
+$$ \frac{\pi}{4} = \mathbb{E}\_{p(\mathbf{x})}[ f(\mathbf{x}) ], \qquad p(\mathbf{x}) = \mathcal{U}(\mathbf{x}; [0,1] \times [0,1] ). $$
+
+This allows us to approximate $\pi / 4$ as:
+
+$$ \frac{\pi}{4} \approx \hat{f}\_N = \frac{1}{N} \sum\_{i=1}^N f(\mathbf{x}\_i), \qquad \mathbf{x}\_i \overset{i.i.d}{\sim} \mathcal{U}(\mathbf{x}; [0,1] \times [0,1] ). $$
+
+---
+class: middle
+
+To approximate $\pi / 4$, we need to draw $N$ uniformly-distributed samples across the unit square and count the proportion of those points which fall into the quarter circle.
+
+.center[.width-50[![](images/pi_MC_2.jpg)]]
+
+---
+exclude: true
+
+class: middle
+
+```
+import numpy as np
+np.random.seed(2)
+
+pi_approx = []
+
+for N in 10**np.arange(1,7):
+    
+    samples = np.random.rand(N, 2)
+
+    N_in = np.sum(samples[:,0]**2 + samples[:,1]**2 <= 1)
+
+    pi_approx.append(N_in/N*4)
+    
+  
+print(pi_approx)
+
+print(np.pi)
+
+```
+
+```
+[4.0, 3.28, 3.136, 3.1484, 3.143, 3.141208]
+3.141592653589793
+```
+
+---
+class: middle, center
+
+## Activity #1
+
+Using numpy, implement this method to approximate $\pi$ and observe the accuracy for different numbers of samples.
+
+
+
+---
+class: middle
+
+.center[
+  ## Sampling from probability distributions
+]
+
+.footnote[In the following, for simplicity, we consider scalar random variables.]
+
+---
+class: middle
+
+.block-center-80.center.italic[
+  "While **computer-assisted pseudo-random number generation** is computationally cheap and fast, it relies on technology which might not be available in the event of a **zombie apocalypse**."
+]
+
+.vspace[
+
+]
+
+.width-70.center[![](images/pi_zombie.png)]
+
+.credit[V. Dumoulin and F. Thouin, ["A Ballistic Monte Carlo Approximation of π"](https://arxiv.org/pdf/1404.1499.pdf), arXiv:1404.1499v2, 2014.]
+
+
+---
+class: middle, center
+
+.left-column[
+![](images/pi_zombie2.png)
+]
+.left-column[
+![](images/pi_zombie3.png)
+] 
+
+Of course, **do not take this too seriously**...
+
+---
+class: middle
+### Pseudo-random number generators
+
+- A Linear Congruential Generator (LCG) is defined by a seed $x\_0$ and the recurrence relation:
+
+  $$ x\_{n+1} = a x\_n + c \hspace{.2cm} (\text{mod } M), \qquad n \ge 0. $$
+
+  If the $a$ and $c$ are chosen carefully, the samples will be roughly uniformly distributed between $0$ and $M − 1$.
+
+- Example proposed by Lewis, Goodman, and Miller (1969) for the IBM System/360:
+
+  $$ x\_{n+1} = 16 807 x\_n \hspace{.2cm} (\text{mod } 2^{31} - 1). $$
+
+- With LCG, we can generate random integers (approximately) uniformly distributed between $0$ and $M − 1$. Assume $M = 2^{64}$, if we simply divide by $M-1$ we can generate double-precision floating-point numbers uniformly distributed in $[0, 1]$.
+
+---
+class: middle,
+
+.block-center-80.center[** In the following, we assume that we have access to a uniform random number generator of real numbers in $[0, 1]$, that we denote by $\mathcal{U}([0,1])$**.
+
+.vspace[
+
+]
+
+Given this random number generator, how can we sample from more complex distributions?
+]
+
+.footnote[Example: The Box–Muller transform, by George Edward Pelham Box and Mervin Edgar Muller, is a random number sampling method for generating pairs of independent, standard, normally distributed (zero expectation, unit variance) random numbers, given a source of uniformly distributed random numbers.]
+
+---
+class: middle
+### Inverse transform sampling
+
+Inverse transform sampling is a method for generating samples from any probability distribution given the **inverse of its cumulative distribution function** (CDF).
+
+
+.left-column[
+
+The CDF of a continuous random variable $x$ with pdf $p(x)$ is defined by: 
+
+$$F\_x(x\_0) = Pr(x \le x\_0) = \int\_{- \infty}^{x\_0} p(x) dx.$$
+
+Inverse transform sampling consists in:
+
+1. Generating ${\displaystyle u \sim \mathcal{U}([0,1])}$
+2. Computing ${\displaystyle x=F\_{x}^{-1}(u)}$. 
+
+Note that for some distributions (including the Gaussian), we cannot invert the CDF.
+
+]
+
+.right-column[
+
+.center.width-80[![](images/ITS.gif)]
+
+]
+
+.reset-column[
+
+
+]
+
+.credit[Image credit: http://www.epixanalytics.com/modelassist/AtRisk/images/9/figure43.gif]
+
+---
+class: middle
+### Change of variable
+
+Let $x$ be a real-valued random variable with pdf $p(x)$. 
+
+Let $g: \mathbb{R} \mapsto \mathbb{R}$ be an invertible mapping.
+
+The pdf $q(y)$ of $ y = g(x) $ is given by:
+
+$$ q(y) = p(g^{-1}(y)) \left\vert \frac{d}{dy} g^{-1}(y). \right\vert$$
+
+The derivative of $g^{-1}$ is denoted as the Jacobian and the absolute value ensures the positivity of the density.
+
+In the multivariate setting, we consider the determinant of the Jacobian.
+
+
+```
+mu = 1
+sigma = 0.1
+
+x = np.random.randn() # ~N(0,1)
+y = mu + sigma*x # ~N(mu, sigma^2)
+```
+
+---
+class: middle
+### Rejection sampling
+
+Rejection sampling is a technique for indirectly sampling from a target distribution $p(x)$ by sampling from a proposal distribution $q(x)$. 
+
+We reject some of the generated samples to compensate for the fact that $q(x) =\not\ p(x)$.
+
+---
+class: middle
+
+The algorithm for rejection sampling goes as follows for $i=1,...,N$:
+
+- Sample $x\_i$ independently from $q(x)$.
+
+- Sample $u_i$ from from the uniform distribution over $[0, Mq(x\_i)]$, where $M$ is a positive number that guarantees $p(x) \le Mq(x)$ for all $x$.
+
+.center.width-70[![](images/RS_target_proposal.svg)]
+
+---
+class: middle
+
+The sampled pairs $(x\_i, u\_i)$ are uniformly distributed under the curve of $M q(x)$, i.e. on the set $\\{(x, u) : 0 \le u \le M q(x)\\}$.
+
+.center.width-70[![](images/RS_target_proposal_1.svg)]
+
+
+---
+class: middle
+
+- If $u\_i \le p(x\_i) $, i.e. $u\_i$ is under the curve of $p(x)$, we **accept** the sample, otherwise we **reject** it. 
+
+  The corresponding **acceptance probability** is equal to the ratio $ p(x\_i) / Mq(x\_i)$.
+
+  .center.width-70[![](images/RS_target_proposal.svg)]
+
+---
+class: middle
+
+.center.width-70[![](images/RS_target_proposal_2.svg)]
+
+The accepted pairs $(u\_i, x\_i)$ have a uniform distribution under the curve $p(x)$, i.e. on the set $\\{(x, u) : 0 \le u \le p(x)\\}$. 
+
+The marginal of this uniform density is the target distribution: 
+
+$$ \int \mathbb{I}\\{0 \le u \le p(x)\\} du = \int\_{0}^{p(x)} du = p(x). $$
+
+ 
+---
+class: middle, center
+
+## Activity #2
+
+Implementation of rejection sampling.
+
+---
+class: middle, center
+
+.width-50[![](images/RS_target_proposal_orig.svg)]
+
+.width-50[![](images/RS_hist.svg)]
+
+---
+class: middle
+
+```
+import numpy as np
+import scipy.stats as st
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+sns.set()
+
+def p(x):
+    return st.norm.pdf(x, loc=30, scale=10) + st.norm.pdf(x, loc=80, scale=20)
+
+def q(x):
+    return st.norm.pdf(x, loc=50, scale=30)
+
+x = np.arange(-50, 151)
+M = max(p(x) / q(x)) # p(x) / q(x) <= M <--> p(x) <= M q(x)
+
+def rejection_sampling(iter=1000):
+    samples = []
+
+    # TO COMPLETE
+    # Use np.random
+
+    return np.array(samples)
+
+s = rejection_sampling(iter=100000)
+
+fig = plt.figure(figsize=(10,5))
+ax = fig.subplots(1,1)
+ax.plot(x, p(x))
+ax.plot(x, M*q(x))
+plt.xlim([-50, 150])
+
+fig = plt.figure(figsize=(10,5))
+ax = fig.subplots(1,1)
+sns.histplot(s, ax=ax)
+plt.xlim([-50, 150])
+
+
+```
+
+
+
+---
+class: middle
+count: false
+
+```
+import numpy as np
+import scipy.stats as st
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+sns.set()
+
+def p(x):
+    return st.norm.pdf(x, loc=30, scale=10) + st.norm.pdf(x, loc=80, scale=20)
+
+def q(x):
+    return st.norm.pdf(x, loc=50, scale=30)
+
+x = np.arange(-50, 151)
+M = max(p(x) / q(x)) # p(x) / q(x) <= M <--> p(x) <= M q(x)
+
+def rejection_sampling(iter=1000):
+    samples = []
+
+    # TO COMPLETE
+    # Use np.random
+
+    return np.array(samples)
+
+s = rejection_sampling(iter=100000)
+
+fig = plt.figure(figsize=(10,5))
+ax = fig.subplots(1,1)
+ax.plot(x, p(x))
+ax.plot(x, M*q(x))
+plt.xlim([-50, 150])
+
+fig = plt.figure(figsize=(10,5))
+ax = fig.subplots(1,1)
+sns.histplot(s, ax=ax)
+plt.xlim([-50, 150])
+
+
+```
+
+.credit[https://wiseodd.github.io/techblog/2015/10/21/rejection-sampling/]
+
+---
+class: middle
+
+### Rejection sampling summary
+
+- Construct an easy to sample density $q(x)$ and a positive number $M$ such that $p(x) \le Mq(x)$.
+- Sample $x\_i$ for $i=1,...,N$ independently from $q(x)$.
+- Accept the sample $x\_i$ with acceptance probability $a(x\_i)$ where 
+  $$ a(x) = \frac{p(x)}{Mq(x)}. $$
+
+.vspace[
+
+]
+
+Rejection sampling can be easily extended for sampling from distributions with unknown normalizing constant, i.e. when we can only evaluate $\phi(x)$ with $\displaystyle p(x) = \frac{1}{Z} \phi(x)$.
+
+---
+class: middle
+
+In high dimension, both rejection sampling and importance sampling may be inefficient, due to very low acceptance probability or importance weights, respectively (cf. last paragraph of Section 11.1.3 of PRML by Bishop.)
+
+
+---
+class: middle, center
+
+## Markov Chain Monte Carlo
+
+---
+class: middle
+
+- Suppose we want to sample from a **target distribution** $\pi(x)$. We can evaluate $\pi(x)$ as a function but have no means to directly generate a sample.
+
+- We have seen methods (inverse transform, density transform, rejection sampling) that all produce **independent realizations** from $\pi(x)$. 
+
+  If these methods are inefficient or difficult to implement (e.g. in high dimension), **we can drop the independence criteria** and generate instead a dependent sequence $\\{x\_n\\}\_{n \ge 1}$ such that the marginal distribution of each $x\_n$ is the target distribution $\pi$.
+
+- Going a step further, we may allow **the marginal distribution to be different from $\pi$, but converge to $\pi$** in some sense.
+
+- By relaxing this independence constraint, it becomes possible to overcome some key problems of the previous sampling methods. A practical framework for constructing dependent sequences satisfying the above-mentioned convergence goal is provided by **Markov chains**.
+
+---
+class: middle
+
+### Markov chain
+
+- A Markov chain is a sequence of random variables $\\{x\_n\\}\_{n \ge 1}$ such that
+
+  $$ p(x\_n | x\_{n-1}, ..., x\_0) =  p(x\_n | x\_{n-1}), $$
+
+  that is, $x\_n$ is **conditionally independent** of $x\_{n-2}, ..., x\_0$ given $x\_{n-1}$. This is called the (1st order) Markov property.
+
+- A Markov chain if fully characterized by the **initial distribution** $p(x\_0)$ and the **transition distribution** $p(x\_n | x\_{n-1})$. 
+
+  For some integer $N \ge 1$:
+
+  $$ p(x\_{0}, x\_{1}, ..., x\_{N}) = p(x\_0)\prod\_{n=1}^N p(x\_n | x\_{n-1}). $$
+
+---
+class: middle
+
+For example, the Gaussian random walk defined by 
+
+$$p(x\_0) = \mathcal{N}(x\_0; 0, 1)$$ 
+
+and 
+
+$$p(x\_n | x\_{n-1}) = \mathcal{N}(x\_n, x\_{n-1}, \sigma^2), \qquad n \ge 1$$
+
+is a Markov chain.
+
+---
+class: middle
+
+### Stationary distribution
+
+$\pi$ is a stationary distribution for the Markov chain defined by the transition distribution $p(x | x')$ if
+
+$$ \pi(x) = \int p(x | x') \pi(x') dx'. $$
+
+
+.footnote[
+  
+Interpretation: The above formula is an expectation. Draw a sample $x' \sim \pi$, use the transition distribution to get a sample $x \sim p(x | x')$, repeat this process infitely many times and average. If you end up with a variable distributed as $\pi$ then it means that it is a stationary distribution for the Markov chain : we started from $\pi$, moved through the Markov chain, and arrived to $\pi$ again. 
+]
+
+---
+class: middle
+
+- Assume that **the initial distribution corresponds to the target distribution**:  
+
+  $$ p(x\_0) = \pi(x\_0). $$
+
+- What is the marginal distribution of $x\_1$?
+
+  $$ p(x\_1) = \int p(x\_1, x\_0) dx\_0 = \int p(x\_1 | x\_0) p(x\_0) dx\_0 = \int p(x\_1 | x\_0) \pi(x\_0) dx\_0 = \pi(x\_1).$$
+
+  if $\pi$ is a stationary distribution for the Markov chain.
+
+- This result generalizes to
+
+  $$ p(x\_n) = \pi(x\_n), \qquad \forall n \ge 1. $$
+
+- However, in practice, we cannot draw $x\_0$ from the target distribution $\pi$, so the last equality generally does not hold.
+
+---
+class: middle
+
+Instead, we have a sequence of marginal distributions generally defined by .tiny[(with slightly different notations, but this is just the sum and product rules as in the previous slide)]:
+
+$$ \pi\_n(x) = \int p(x | x') \pi_{n-1}(x') dx'.$$
+
+
+Does this sequence of distributions converge and, if so, what does it converge
+to?
+
+---
+class: middle
+
+
+.center.block-center-80[
+**A key result is that for an ergodic Markov chain there exists a unique stationary distribution $\pi$ to which all the marginal distributions $\pi\_n(x)$ converge, irrespective of the initial distribution $\pi\_0(x)$.**
+]
+
+.vspace[
+
+]
+
+The Markov chain is ergodic if it is irreducible, aperiodic and positive recurrent. 
+
+Defining these properties is out of the scope of this lecture.
+
+---
+class: middle
+
+- The previous discussion suggests that, if we can design a transition distribution $p(x | x')$ such that the target $\pi(x)$ is its stationary distribution, at least in principle we can generate samples from the Markov chain that eventually will tend to be drawn from the target distribution.
+
+- After ignoring samples obtained from an initial "burn in" period, as the chain moves towards the stationary distribution, the generated samples can be subsequently used to estimate expectations under the target distribution, as if they are independent.
+
+- Formally we require the chain to be ergodic, otherwise the chain might never reach the desired stationary distribution.
+
+- Determining ergodicity and stationarity for an arbitrary Markov chain is difficult, except in cases where a stronger condition known as **detailed balance** holds.
+
+
+---
+class: middle
+
+### Detailed balance
+
+If the transition distribution of the Markov chain satisfies
+
+$$ p(x' | x) \pi(x) = p(x | x') \pi(x') $$
+
+then $\pi$ is a stationary distribution.
+
+.vspace[
+
+]
+
+Proof: Integrating on both sides we have
+$$
+\begin{aligned}
+\pi(x) = \int p(x' | x) \pi(x) d x' &= \int p(x | x') \pi(x') d x'
+\end{aligned}
+$$
+
+.footnote[This is a sufficient condition; a Markov chain may have $\pi$ as the stationary distribution while not satisfying detailed balance.]
+
+---
+class: middle
+
+### MCMC summary
+
+**General idea**
+
+  - Construct a Markov chain such that its stationary distribution is $\pi$, 
+  - Simulate that chain to obtain samples, 
+  - Discard the first samples associated with the so-called burn-in period, 
+  - Build Monte Carlo estimates to approximate intractable expectations.
+
+**Theory**
+  
+  The MCMC algorithm is correct if the Markov chain is ergodic with stationary distribution $\pi$.
+
+  A sufficient condition for the Markov chain to admit $\pi$ as a stationary distribution is the detailed balance condition.
+
+**Examples**
+
+  The Metropolis-Hastings algorithm and the Gibbs sampler.
+
+
+---
+class: middle, center
+
+## Metropolis-Hastings algorithm
+
+---
+class: middle
+
+Suppose we are given 
+
+- a **target density** $\pi(x) = \phi(x)/Z$, where $Z$ is a possibly unknown normalization constant, 
+- and a **proposal density** $q(x' | x)$. 
+
+We can evaluate the target density but we cannot sample from it directly.
+
+---
+class: middle
+
+### Metropolis-Hastings algorithm
+
+Given an arbitrary initial sample $x\_0$, the Metropolis-Hastings (MH) algorithm iterates for $n \ge 1$:
+
+- Sample $x\_n'$ from the proposal $q(x\_n' | x\_{n-1})$
+
+- Accept the sample with **acceptance probability**
+
+  $$ \alpha(x\_n', x\_{n-1}) = \min \left\\{1, \frac{q(x\_{n-1} | x\_n')\pi(x\_n')}{q(x\_n' | x\_{n-1})\pi(x\_{n-1})} \right\\}. $$
+
+  If the sample is rejected, the chain stays at the previous state.
+
+Note that to compute the acceptance probability, we only need to evaluate $\pi$ up to a normalization, since the normalization constant cancels out.
+
+
+---
+class: middle
+
+### Metropolis-Hastings algorithm
+
+Given an arbitrary initial sample $x\_0$, the Metropolis-Hastings (MH) algorithm iterates for $n \ge 1$:
+
+- Sample $x\_n'$ from the proposal $q(x\_n' | x\_{n-1})$
+
+- Compute the **acceptance probability**
+
+  $$ \alpha(x\_n', x\_{n-1}) = \min \left\\{1, \frac{q(x\_{n-1} | x\_n')\pi(x\_n')}{q(x\_n' | x\_{n-1})\pi(x\_{n-1})} \right\\}. $$
+
+- Sample $u$ from the uniform distribution $\mathcal{U}([0,1])$. 
+
+- If $u < \alpha(x\_n \rightarrow x\_n')$, accept the sample and set
+
+  $$ x\_n = x\_n', $$
+
+  otherwise, reject the sample and set
+
+  $$ x\_{n} = x\_{n-1}. $$
+
+---
+class: middle
+
+The MH algorithm implicitly defines a transition probability $p(x | x')$ (not simply equal to the proposal $q(x | x')$) which can be shown to satisfy the detailed balance condition. 
+
+---
+class: center, middle
+
+[Random walk MH demo](https://chi-feng.github.io/mcmc-demo/app.html?algorithm=RandomWalkMH&target=banana)
+
+By tuning the random walk variance $\sigma^2$ we see that there is a trade-off between the number of accepted samples and the ability to explore quickly the complete target density.
+
+---
+class: middle, center
+
+## The Gibbs sampler
+
+---
+class: middle
+
+- The MH schema is a very general technique for deriving MCMC algorithms. This generality stems partially from the arbitrariness of the proposal $q$. 
+
+- However, in complex models the design of a reasonable proposal can require a lot of work. 
+
+- It would be desirable if somehow the proposal design phase could be automated. The Gibbs sampler is an attempt in this direction.
+
+---
+class: middle
+
+The Gibbs sampler is suitable for **sampling a multivariate random variable** $\mathbf{x} = \\{x\_1, x\_2, ..., x\_D\\}$ with intractable joint target density $p(\mathbf{x})$.
+
+**Gibbs sampling proceeds by partitioning the set of variables** $\mathbf{x}$ into a chosen variables $x\_i$ and the rest $\mathbf{x}\_{-i}$, such that $\mathbf{x} = \\{x\_i , \mathbf{x}\_{-i}\\}$.
+
+It is assumed that the **full conditionals** $p(x\_i | \mathbf{x}\_{-i})$ are tractable and easy to sample. 
+
+Remember that we can rely on the **Makov blanket** of $x\_i$ to simplify its full conditional (see Lecture 3). This is fundamental for Gibbs sampling in Bayesian networks!
+
+It can be shown that the Gibbs sampler is actually a MH algorithm with a specific proposal that leads to an acceptance probability of 1, i.e. every sample is accepted.
+
+
+---
+class: middle
+
+### Gibbs sampler
+
+From an abitrary initial sample $\mathbf{x}\_0 = \\{x\_{1,0}, x\_{2,0}, ..., x\_{D,0}\\}$, the Gibbs sampler iterates for $n \ge 1$:
+
+- sample $x\_{1,n}$ from $p(x\_1 | x\_{2, n-1}, x\_{3, n-1}, ..., x\_{D, n-1})$
+- sample $x\_{2,n}$ from $p(x\_2 | x\_{1, n}, x\_{3, n-1}, ..., x\_{D, n-1})$
+- ...
+- sample $x\_{D,n}$ from $p(x\_D | x\_{1, n}, x\_{2, n}, ..., x\_{D-1, n})$
+
+The order for scanning the set of variables $\mathbf{x}$ can be either fixed or defined randomly at each iteration.
+
+---
+class: middle, center
+
+[Gibbs sampling demo](https://chi-feng.github.io/mcmc-demo/app.html?algorithm=GibbsSampling&target=banana)
+
+In 2D, at each iteration of a Gibbs sampler we perform two moves, one corresponding to the sampling of $p(x\_1 | x\_2)$ and the other one corresponding to the sampling of $p(x\_2 | x\_1)$.
+
+---
+class: middle, center
+
+## Mixing time of MCMC
+
+---
+class: middle
+
+A key parameter an MCMC algorithm is the number of burn-in steps. 
+
+Intuitively, this corresponds to the number of steps needed to converge to our limit (stationary) distribution. 
+
+This is called the **mixing time** of the Markov chain. Unfortunately, this time may vary dramatically, and may sometimes take essentially forever.
+
+There exist many heuristics to determine whether a Markov chain has mixed. Typically these heuristics involve plotting certain quantities such as the sample path or the autocorrelation.
+
+---
+class: middle
+
+- The sample path is a plot of the realizations $x\_n$ along the iterations $n$. If a chain is mixing poorly, it will remain at or near the same value for many iterations. 
+
+- The autocorrelation at lag $\tau$ is the correlation between samples that are $\tau$ iterations apart. A Markov chain that has poor mixing properties will exhibit slow decay of the autocorrelation as the lag between samples increases.
+
+
+
+---
+class: middle
+## References
+
+- A. Taylan Cemgil, [A Tutorial Introduction to Monte Carlo methods, Markov Chain Monte Carlo and Particle Filtering](https://www.cmpe.boun.edu.tr/~cemgil/Courses/cmpe548/cmpe58n-lecture-notes.pdf), in Academic Press Library in Signal Processing (Vol. 1, pp. 1065-1114). Elsevier.
+
+- [MCMC course](http://dept.stat.lsa.umich.edu/~kshedden/Courses/Stat606/Notes/mcmc.pdf) by Professor Kerby Shedden at University of Michigan 
+
+- [Sampling methods](https://ermongroup.github.io/cs228-notes/inference/sampling/), part of lecture notes for [CS 228 - Probabilistic Graphical Models](https://ermongroup.github.io/cs228-notes/) course at Standford.
+
+- Course on [Bayesian Methods for Latent Variable Model](http://www.gretsi.fr/peyresq10/documents/cappe.pdf) by Olivier Cappé, 5ème école d'été de Peyresq, 2010.
+
+
+</textarea>
+<script src="../assets/remark-latest.min.js"></script>
+<script src="../assets/auto-render.min.js"></script>
+<script src="../assets/katex.min.js"></script>
+<script type="text/javascript">
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    var options = {sourceUrl: getParameterByName("p"),
+                    highlightLanguage: "python",
+                    // highlightStyle: "tomorrow",
+                    // highlightStyle: "default",
+                    highlightStyle: "github",
+                    // highlightStyle: "googlecode",
+                    // highlightStyle: "zenburn",
+                    highlightSpans: true,
+                    highlightLines: true,
+                    ratio: "16:9"};
+
+    var renderMath = function() {
+        renderMathInElement(document.body, {delimiters: [ // mind the order of delimiters(!?)
+            {left: "$$", right: "$$", display: true},
+            {left: "$", right: "$", display: false},
+            {left: "\\[", right: "\\]", display: true},
+            {left: "\\(", right: "\\)", display: false},
+        ]});
+    }
+  var slideshow = remark.create(options, renderMath);
+</script>
+</body>
+</html>

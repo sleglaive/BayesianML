@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bayesian Methods for Machine Learning</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <link rel="stylesheet" href="../assets/katex.min.css">
+  <link rel="stylesheet" type="text/css" href="../assets/slides.css">
+  <link rel="stylesheet" type="text/css" href="../assets/grid.css">
+<!-- Change equation font color defined in ../assests/slides.css -->
+<script type="text/javascript">
+  document.documentElement.style
+  .setProperty('--eq_font_color', '#004c86');
+</script>
+</head>
+<body>
+
+<textarea id="source">
+
+
+class: center, middle
+
+<br/>
+# Bayesian Methods for Machine Learning
+
+.small-vspace[
+
+]
+
+### Lecture 1 - Fundamentals of Bayesian modeling and inference
+
+<br/><br/>
+.bold[Simon Leglaive]
+<br/>
+<br/>
+
+<br/><br/>
+.tiny[CentraleSupélec, 2020-2021]
+
+
+---
+class: middle
+
+.center[ 
+  # Introductory example
+]
+
+<br/>
+
+.block-center-70[
+  .medium.center[The following example and drawings are adapted from a [tutorial on Bayesian Learning for Signal Processing](https://members.loria.fr/ADeleforge/files/bayesian_inference_electronic.pdf) given by Antoine Deleforge at the LVA/ICA 2015 Summer School.]
+]
+
+---
+class: center, middle
+
+![](images/bayes_1.svg)
+
+---
+class: center, middle
+
+![](images/bayes_2.svg)
+
+---
+class: center, middle
+
+![](images/bayes_3.svg)
+
+---
+class: center, middle
+
+![](images/bayes_4.svg)
+
+---
+class: center, middle
+
+![](images/bayes_5.svg)
+
+---
+class: center, middle
+
+![](images/bayes_6.svg)
+
+---
+class: center, middle
+
+![](images/bayes_7.svg)
+
+---
+class: center, middle
+
+![](images/bayes_8.svg)
+
+---
+## Modeling
+
+.grid[
+
+.kol-3-5[
+
+.width-100[![](images/bayes_data_house.svg)]
+
+]
+
+.kol-2-5[
+
+**Observed variables**
+
+$$\left\\{\mathbf{x}\_n = \[x\_{1,n}, x\_{2,n}\]^\top \in \mathbb{R}^2 \right\\}\_{n=1}^N$$
+
+**Latent (hidden) variable**
+
+$$ z \in \\{1,2,3\\} $$
+
+]
+
+]
+
+---
+## Modeling
+
+.grid[
+
+.kol-3-5[
+
+.width-100[![](images/bayes_data_house_likelihood.svg)]
+
+]
+
+.kol-2-5[
+
+**Observed variables**
+
+$$\left\\{\mathbf{x}\_n = \[x\_{1,n}, x\_{2,n}\]^\top \in \mathbb{R}^2 \right\\}\_{n=1}^N$$
+
+**Latent (hidden) variable**
+
+$$ z \in \\{1,2,3\\} $$
+
+**Observation model**
+
+- $p(\mathbf{x}\_n | z=1) = \mathcal{N}(\boldsymbol{\mu}\_1, \sigma^2\mathbf{I})$
+- $p(\mathbf{x}\_n | z=2) = \mathcal{N}(\boldsymbol{\mu}\_2, \sigma^2\mathbf{I})$
+- $p(\mathbf{x}\_n | z=3) = \mathcal{N}(\boldsymbol{\mu}\_3, \sigma^2\mathbf{I})$
+
+  with $\boldsymbol{\mu}\_1$, $\boldsymbol{\mu}\_2$, $\boldsymbol{\mu}\_3$ and $\sigma^2$ known and fixed.
+
+]
+]
+
+
+---
+## Maximum likelihood (ML) estimation
+
+
+The probability density function of the multivariate Gaussian distribution is defined by:
+
+$$ \mathcal{N}(\mathbf{x}; \boldsymbol{\mu}, \boldsymbol{\Sigma}) = \frac{1}{\sqrt{\det(2\pi\boldsymbol{\Sigma})}} \exp\left( -\frac{1}{2} (\mathbf{x} - \boldsymbol{\mu})^\top \boldsymbol{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) \right) $$
+
+.grid[
+
+.kol-3-5[
+
+.width-100[![](images/bayes_data_house_likelihood.svg)]
+
+]
+
+.kol-2-5[
+
+
+**Likelihood**
+
+$$
+\begin{aligned}
+\mathcal{L}(i) &= p(\mathbf{x}\_1, \mathbf{x}\_2, ..., \mathbf{x}\_N | z=i) \\\\
+&= \prod\limits\_{n=1}^N p(\mathbf{x}\_n | z=i) \\\\
+&= \prod\limits\_{n=1}^N \mathcal{N}(\mathbf{x}\_n ; \boldsymbol{\mu}\_i, \sigma^2\mathbf{I})
+\end{aligned}
+$$
+
+]
+
+]
+
+
+---
+count: false
+## Maximum likelihood (ML) estimation
+
+
+The probability density function of the multivariate Gaussian distribution is defined by:
+
+$$ \mathcal{N}(\mathbf{x}; \boldsymbol{\mu}, \boldsymbol{\Sigma}) = \frac{1}{\sqrt{\det(2\pi\boldsymbol{\Sigma})}} \exp\left( -\frac{1}{2} (\mathbf{x} - \boldsymbol{\mu})^\top \boldsymbol{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) \right) $$
+
+.grid[
+
+.kol-3-5[
+
+.width-100[![](images/bayes_data_house_likelihood.svg)]
+
+]
+
+.kol-2-5[
+
+
+**Log-likelihood**
+
+$$
+\begin{aligned}
+\mathcal{L}(i)  &= \ln p(\mathbf{x}\_1, \mathbf{x}\_2, ..., \mathbf{x}\_N | z=i) \\\\
+&= \ln \prod\limits\_{n=1}^N p(\mathbf{x}\_n | z=i) \\\\
+&= \sum\limits\_{n=1}^N \ln \mathcal{N}(\mathbf{x}\_n ; \boldsymbol{\mu}\_i, \sigma^2\mathbf{I}) 
+\end{aligned}
+$$
+
+]
+
+]
+
+
+
+---
+class: middle
+
+```
+import numpy as np
+from scipy.stats import multivariate_normal
+
+mu_1 = np.array([2.5, 5])
+mu_2 = np.array([5, 5])
+mu_3 = np.array([7.5, 5])
+
+Sigma = 100*np.eye(2)
+
+log_likelihood = np.zeros(3)
+
+for i, mu in enumerate([mu_1, mu_2, mu_3]):
+    log_likelihood[i] = np.sum(multivariate_normal.logpdf(data, mean=mu, cov=Sigma))
+
+print(log_likelihood)
+
+>>> [-649.56488429 -648.88937372 -654.46386315]
+
+
+```
+
+
+
+
+$$ \hat{z} = \underset{i \in \\{1,2,3\\}}{\arg\max}\, \mathcal{L}(i) = 2 $$
+
+---
+class: center, middle
+
+.width-60[![](images/bayes_grandma.svg)]
+
+---
+## Bayesian modeling
+
+.grid[
+
+.kol-3-5[
+
+.width-100[![](images/bayes_data_house_likelihood.svg)]
+
+]
+
+.kol-2-5[
+
+**Observed variables**
+
+$$\left\\{\mathbf{x}\_n = \[x\_{1,n}, x\_{2,n}\]^\top \in \mathbb{R}^2 \right\\}\_{n=1}^N$$
+
+**Latent (hidden) variable**
+
+$$ z \in \\{1,2,3\\} $$
+
+**Observation model (likelihood)**
+
+$$p(\mathbf{x}\_n | z=i) = \mathcal{N}(\boldsymbol{\mu}\_i, \sigma^2 \mathbf{I})$$
+
+**Prior**
+
+- $p(z = 1) = 0.3$ (student house)
+- $p(z = 2) = 0.1$ (grandma Jane)
+- $p(z = 3) = 0.6$ (family with kids)
+
+]
+
+]
+
+
+---
+## Bayesian inference
+
+**Bayes' Theorem** allows us to compute the **posterior** distribution given the likelihood and the priors:
+
+$$
+\begin{aligned}
+p(z=i | \mathbf{x}\_1, ..., \mathbf{x}\_N ) &= \frac{p( \mathbf{x}\_1, ..., \mathbf{x}\_N | z=i ) p(z=i)}{ p( \mathbf{x}\_1, ..., \mathbf{x}\_N)}\\\\[.4cm]
+&= \frac{p( \mathbf{x}\_1, ..., \mathbf{x}\_N | z=i ) p(z=i)}{ \sum\_{k=1}^3 p( \mathbf{x}\_1, ..., \mathbf{x}\_N, z=k)} \quad\quad \text{\footnotesize (using the sum rule)}\\\\[.6cm]
+&= \frac{p( \mathbf{x}\_1, ..., \mathbf{x}\_N | z=i ) p(z=i)}{ \sum\_{k=1}^3 p( \mathbf{x}\_1, ..., \mathbf{x}\_N | z=k) p(z=k)}  \quad\quad \text{\footnotesize (using the product rule)}\\\\[.6cm]
+&= \frac{p(z=i) \prod\_n p( \mathbf{x}\_n | z=i )}{ \sum\_{k=1}^3 p(z=k) \prod\_n p( \mathbf{x}\_n | z=k ) }\\\\
+\end{aligned}
+$$
+
+???
+
+- Sum rule: $ p(x) = \sum\_y p(x, y) = \sum p(x | y) p(y) $
+
+- Product rule: $p(x,y) = p(x|y) p(y) = p(y|x) p(x)$
+
+---
+
+```
+# z=1 : student house, z=2: grandma Jane, z=3 family with kids
+
+prior = np.array([0.3, 0.1, 0.6])
+log_prior = np.log(prior)
+log_joint = log_likelihood + log_prior
+
+print(log_prior)
+print(log_likelihood)
+print(log_joint)
+
+>>>[-1.2039728  -2.30258509 -0.51082562]
+>>>[-649.56488429 -648.88937372 -654.46386315]
+>>>[-650.7688571  -651.19195881 -654.97468877]
+
+log_marginal = np.log(np.sum(np.exp(log_joint)))
+log_posterior = log_joint - log_marginal
+posterior = np.exp(log_posterior)
+
+```
+
+.width-70[![](images/posterior.svg)]
+
+
+???
+
+```
+log_marginal = np.log(np.sum(np.exp(log_joint)))
+log_posterior = log_joint - log_marginal
+posterior = np.exp(log_posterior)
+print(posterior)
+
+```
+
+The posterior combines the information from the prior and the observations. It updates the prior using the observations, through the Bayes' rule.
+
+The MAP is a point estimate which summarizes the posterior. 
+
+The complete posterior provides uncertainty information.
+
+---
+## Decision
+
+The posterior contains all the information about the latent variable we care about, but it does not directly tell Bayes which house is the guilty one.
+
+From the posterior $p(z=i | \mathbf{x}\_1, ..., \mathbf{x}\_N )$, $i \in \\{1,2,3\\}$, Bayes needs to choose a single value $\hat{z}$ which will serve as a point estimate of the latent variable $z$.
+ 
+In other words, he needs to take a **decision**.
+
+---
+
+To do so, Bayes needs to build a **loss function** $\mathcal{l}(\hat{z}=k, z=i)$ which tells "how bad" would it be to decide $\hat{z} = k$ if the "true value" of the latent variable was $z = i$, with $(k, i) \in \\{1,2,3\\}^2.$ 
+
+- Of course he sets $\mathcal{l}(\hat{z}=k, z=k) = 0$ for all $k$.
+- Bayes appreciates grandma Jane a lot, he really doesn't want to accuse her by mistake, so he sets $\mathcal{l}(\hat{z}=2, z=\not\ 2) = 10$.
+- On the contrary, he does not really care if he accuses the kids or the students by mistake, so he sets $\mathcal{l}(\hat{z}=1, z=\not\ 1) = \mathcal{l}(\hat{z}=3, z=\not\ 3) = 1$.
+
+
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-fo6f{border-color:#000000;color:#ffffff;font-size:15px;text-align:center;vertical-align:middle}
+.tg .tg-xo0b{border-color:#000000;font-size:15px;text-align:center;vertical-align:middle}
+</style>
+<table class="tg">
+<thead>
+  <tr>
+    <td class="tg-xo0b"><span style="font-weight:400;font-style:normal">Loss function</span></td>
+    <th class="tg-xo0b"><span style="font-weight:400;font-style:normal">students ($\hat{z}=1$)</span></th>
+    <th class="tg-xo0b"><span style="font-weight:400;font-style:normal">grandma Jane ($\hat{z}=2$)</span></th>
+    <th class="tg-xo0b"><span style="font-weight:400;font-style:normal">kids ($\hat{z}=3$)</span></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <th class="tg-xo0b"><span style="font-weight:400;font-style:normal">students ($z=1$)</span></th>
+    <td class="tg-xo0b">0</td>
+    <td class="tg-xo0b">10</td>
+    <td class="tg-xo0b">1</td>
+  </tr>
+  <tr>
+    <th class="tg-xo0b"><span style="font-weight:400;font-style:normal">grandma Jane ($z=2$)</th>
+    <td class="tg-xo0b">1</td>
+    <td class="tg-xo0b">0</td>
+    <td class="tg-xo0b">1</td>
+  </tr>
+  <tr>
+    <th class="tg-xo0b"><span style="font-weight:400;font-style:normal">kids ($z=3$)</th>
+    <td class="tg-xo0b">1</td>
+    <td class="tg-xo0b">10</td>
+    <td class="tg-xo0b">0</td>
+  </tr>
+</tbody>
+</table>
+
+
+
+---
+
+The **posterior expected loss** is defined as the expectation of the loss taken with respect to the posterior distribution:
+
+$$\begin{aligned} 
+\mathcal{L}(\hat{z} = k) &= \mathbb{E}\_{p(z=i | \mathbf{x}\_1, ..., \mathbf{x}\_N )}[l(\hat{z}=k, z=i)] \\\\
+&= \sum\_{i=1}^3 l(\hat{z}=k, z=i) p(z=i | \mathbf{x}\_1, ..., \mathbf{x}\_N ).
+\end{aligned} 
+$$
+
+It consists in weighting the loss using the knowledge/uncertainty that Bayes has at the moment he wants to take the decision, which is of course carried by the posterior.
+
+To take his decision, Bayes finally minimizes the loss:
+
+$$  \hat{z}\_{\text{guilty}} = \underset{k \in \\{1,2,3\\} }{\arg\min}\, \mathcal{L}(\hat{z} = k).$$
+
+---
+.grid[
+
+.kol-1-2[
+.width-100[![](images/posterior.svg)]
+]
+.kol-1-2[
+.width-100[![](images/expect_posterior_loss.svg)]
+]
+]
+
+.grid[
+
+.kol-3-5[
+
+The decision that minimizes the posterior expected loss is $\hat{z}\_{\text{guilty}} = 1$ (the students!). 
+
+It also corresponds to the **maximum a posteriori** (MAP) estimate: 
+
+$$ \hat{z}\_{\text{MAP}} = \underset{i \in \\{1,2,3\\}}{\arg\max}\, p(z=i | \mathbf{x}\_1, ..., \mathbf{x}\_N ).$$
+
+But we can see that "the ranking" between the suspects is different according to the posterior and the posterior expected loss.
+
+]
+.kol-2-5[
+.width-100[![](images/bayes_pranksters.svg)]
+
+]
+
+]
+
+
+
+
+---
+## Prediction
+
+The next day, Bayes goes to the university armed with its **predictive posterior**:
+
+$$\begin{aligned}
+p(\mathbf{x}\_{\text{new}} | \mathbf{x}\_1, ..., \mathbf{x}\_N) &= \sum\_{i=1}^3 p(\mathbf{x}\_{\text{new}}, z=i | \mathbf{x}\_1, ..., \mathbf{x}\_N)\\\\
+&= \sum\_{i=1}^3 p(\mathbf{x}\_{\text{new}} | z=i,  \mathbf{x}\_1, ..., \mathbf{x}\_N) p(z=i | \mathbf{x}\_1, ..., \mathbf{x}\_N)\\\\
+&= \sum\_{i=1}^3 p(\mathbf{x}\_{\text{new}} | z=i) p(z=i | \mathbf{x}\_1, ..., \mathbf{x}\_N)\\\\
+&= \sum\_{i=1}^3 \mathcal{N}(\mathbf{x}\_{\text{new}}; \boldsymbol{\mu}\_i, \sigma^2 \mathbf{I}) p(z=i | \mathbf{x}\_1, ..., \mathbf{x}\_N)\\\\
+&= \mathbb{E}\_{p(z=i | \mathbf{x}\_1, ..., \mathbf{x}\_N)}\left[ \mathcal{N}(\mathbf{x}\_{\text{new}}; \boldsymbol{\mu}\_i, \sigma^2 \mathbf{I}) \right]
+\end{aligned}$$
+
+???
+
+We "average" the likelihood over all the realizations of $z$ according to its posterior.
+
+---
+
+```
+x, y = np.mgrid[0:10:.01, 0:10:.01]
+pos = np.dstack((x, y))
+
+pred_1 = multivariate_normal(mean=mu_1, cov=Sigma_viz).pdf(pos)
+pred_2 = multivariate_normal(mean=mu_2, cov=Sigma_viz).pdf(pos)
+pred_3 = multivariate_normal(mean=mu_3, cov=Sigma_viz).pdf(pos)
+
+pred = pred_1*posterior[0] + pred_2*posterior[1] + pred_3*posterior[2]
+
+
+fig3 = plt.figure(figsize=(10,4))
+ax3 = fig3.add_subplot(111)
+ax3.scatter(data[:,0], data[:,1], color='blue', s=10)
+plt.xlim(0, 10)
+plt.ylim(0, 10)
+
+ax3.contour(x, y, pred, 10)
+
+```
+
+
+.center.width-70[![](images/predictive posterior.svg)]
+
+---
+class: center, middle
+
+.center.width-70[![](images/bayes_pred_house.svg)]
+
+---
+
+By comparison, prediction in "frequentist statistics" involves finding an optimum point estimate of the latent variables, e.g. by ML or MAP estimation, and then plugging this estimate into the likelihood distribution. 
+
+This has the disadvantage that it does not account for any **uncertainty** in the value of the parameter, and hence will underestimate the variance of the predictive distribution.
+
+$$\hat{z}^{\text{MAP}} = \underset{i \in \\{1,2,3\\}}{\arg\max}\, p(z=i | \mathbf{x}\_1, ..., \mathbf{x}\_N ) = 1$$
+
+$$p(\mathbf{x}\_{\text{new}} | z=\hat{z}^{\text{MAP}}) = \mathcal{N}(\mathbf{x}\_{\text{new}}; \boldsymbol{\mu}\_1, \sigma^2 \mathbf{I})
+$$
+
+.center.width-70[![](images/MAP_prediction.svg)]
+
+---
+class: center, middle
+
+.center.width-70[![](images/bayes_pred_house_2.svg)]
+
+---
+
+We can also compute the **predictive prior**, which tells us what we would predict given no observations. This is useful to check if the prior distribution does capture our prior beliefs.
+
+.left-column[
+
+.caption[Predictive prior]
+.width-100[![](images/predictive_prior.svg)]
+
+
+$$ \mathbb{E}\_{p(z=i)}\left[ \mathcal{N}(\mathbf{x}; \boldsymbol{\mu}\_i, \sigma^2 \mathbf{I}) \right] $$
+
+.tiny[1st house: students; 2nd house: grandma; 3rd house: kids]
+
+]
+
+--
+count: false
+
+.right-column[
+
+.caption[Predictive posterior]
+.width-100[![](images/predictive_posterior_house.svg)]
+
+$$ \mathbb{E}\_{p(z=i | \mathbf{x}\_1, ..., \mathbf{x}\_N)}\left[ \mathcal{N}(\mathbf{x}; \boldsymbol{\mu}\_i, \sigma^2 \mathbf{I}) \right] $$
+
+]
+
+
+---
+class: center, middle
+
+# Bayesian cooking recipe
+
+---
+## Modeling
+
+- What are the observations $\mathbf{x}$ (assumed continuous in $\mathbb{R}^D$)?
+- What are the latent (i.e. hidden, unobserved) variables $\mathbf{z}$ (assumed continuous in $\mathbb{R}^L$)?
+- Define the joint distribution:
+
+  $$ p(\mathbf{x}, \mathbf{z} ;  \theta) = p(\mathbf{x} | \mathbf{z} ;  \theta\_x) p(\mathbf{z} ; \theta\_z), $$
+
+  $\triangleright\,$ $p(\mathbf{z} ;  \theta\_z)$ is the **prior**, it encodes the prior bielief and uncertainty about the latent variables of interest
+  .tiny.italics[(e.g. grandma jane is soooo kind, students become crazy when they party, kids like to play tricks)].
+
+  $\triangleright\,$ $p(\mathbf{x} | \mathbf{z} ;  \theta\_x)$ is the **likelihood**, it defines how the observations are generated from the latent variables of interest .tiny.italics[(e.g. stones are launched independently from each other given the guilty house, and their position follows a Gaussian distribution)].
+  
+  $\triangleright\,$ $\theta = \\{ \theta\_x, \theta\_z \\}$ are the model (hyper-)parameters, which are **deterministic**.
+
+.footnote[Note that the likelihood is not a probability distribution over $\mathbf{z}$, its integral with respect to $\mathbf{z}$ does not (necessarily) equal one. The likelihood is a function of $\mathbf{z}$.]
+
+---
+## Inference
+
+
+Inference consists in computing the **posterior** distribution of the latent variables $p(\mathbf{z}|\mathbf{x}; \theta)$, i.e. the distribution of the latent random variables given the observations. 
+
+This distribution summarizes our knowledge on $\mathbf{z}$ **once** we have observed $\mathbf{x}$.
+
+Using **Bayes' theorem**, the posterior distribution decomposes as:
+$$p(\mathbf{z}|\mathbf{x}; \theta) = \frac{p(\mathbf{x}|\mathbf{z}; \theta\_x) p(\mathbf{z} ; \theta\_z) }{ p(\mathbf{x}; \theta)}  = \frac{p(\mathbf{x}|\mathbf{z}; \theta\_x) p(\mathbf{z}; \theta\_z)}{\int p(\mathbf{x}|\mathbf{z}; \theta\_x)p(\mathbf{z}; \theta\_z) d\mathbf{z}},$$
+
+where 
+
+$$p(\mathbf{x}; \theta) = \int p(\mathbf{x}, \mathbf{z}; \theta\_x) d\mathbf{z} = \int p(\mathbf{x}|\mathbf{z}; \theta\_x)p(\mathbf{z}; \theta\_z) d\mathbf{z}$$ 
+
+is called the **marginal likelihood**, or **evidence**. 
+
+In some cases, this integral cannot be computed analytically, in which case we need to resort to **approximate inference techniques**.
+
+---
+## Decision
+
+- The process of inference will often require us to **use the posterior to answer various questions**. 
+
+- $p(\mathbf{z} | \mathbf{x}; \theta)$ contains all the information about $\mathbf{z}$ we care about, but it does not directly provide an "estimate" of the $\mathbf{z}$.
+
+ From the posterior $p(\mathbf{z} | \mathbf{x}; \theta)$, we need to choose a single value $\hat{\mathbf{z}}$ to serve as a **point estimate** of $\mathbf{z}$. 
+ 
+ To a Bayesian, this is a **decision**, and in **different contexts we might want to select different point estimates**.
+
+---
+
+- To take the decision, we need to introduce a **loss function** $\mathcal{l}(\hat{\mathbf{z}}, \mathbf{z})$ which tells us "how bad" would $\hat{\mathbf{z}}$ be if the "true value" of the latent variable was $\mathbf{z}$. 
+
+- The decision is then taken by minimizing the **posterior expected loss**:
+
+ $$ \mathcal{L}(\hat{\mathbf{z}}) = \mathbb{E}\_{p(\mathbf{z} | \mathbf{x}; \theta)}[\mathcal{l}(\hat{\mathbf{z}}, \mathbf{z})].$$
+
+- For example, let's consider the mean squared error (MSE) loss $\mathcal{l}(\hat{\mathbf{z}}, \mathbf{z}) = (\hat{\mathbf{z}} - \mathbf{z})^2$. 
+
+  Minimizing the posterior expected loss with respect to $\hat{\mathbf{z}}$ gives the **posterior mean**:
+
+  $$ \hat{\mathbf{z}}\_{MSE} =  \underset{\hat{\mathbf{z}}}{\arg\min}\,  \mathbb{E}\_{p(\mathbf{z} | \mathbf{x}; \theta)}[(\hat{\mathbf{z}} - \mathbf{z})^2] = \mathbb{E}\_{p(\mathbf{z} | \mathbf{x}; \theta)}[\mathbf{z} ].$$
+
+  With different losses, we could obtain the MAP (also called the posterior mode), or the median.
+
+---
+## Prediction
+
+**Predictive prior**: "Averaging" the likelihood over the prior.
+
+$$\begin{aligned}
+p(\mathbf{x}\_{\text{new}}; \theta) &=  \int p(\mathbf{x}\_{\text{new}}, \mathbf{z} ; \theta) d\mathbf{z}\\\\
+&=  \int p(\mathbf{x}\_{\text{new}} | \mathbf{z} ; \theta\_x) p(\mathbf{z}; \theta\_z) d\mathbf{z}\\\\
+&= \mathbb{E}\_{p(\mathbf{z} ; \theta\_z)}[p(\mathbf{x}\_{\text{new}} | \mathbf{z} ; \theta\_x )].
+\end{aligned}$$
+
+
+
+**Predictive posterior**: "Averaging" the likelihood over the posterior.
+
+
+$$\begin{aligned}
+p(\mathbf{x}\_{\text{new}} | \mathbf{x} ; \theta) &= \int p(\mathbf{x}\_{\text{new}}, \mathbf{z} | \mathbf{x}  ; \theta) d\mathbf{z}\\\\
+&= \int p(\mathbf{x}\_{\text{new}} | \mathbf{z}  ; \theta\_x) p(\mathbf{z} | \mathbf{x}  ; \theta) d\mathbf{z}\\\\
+&= \mathbb{E}\_{p(\mathbf{z} | \mathbf{x} ; \theta)}[p(\mathbf{x}\_{\text{new}} | \mathbf{z}  ; \theta\_x )].
+\end{aligned}$$
+
+---
+class: center, middle
+
+# Bayesian inference for the Gaussian
+
+---
+## Modeling
+
+- We **observe** $N$ independent and identically distributed (i.i.d) Gaussian variables:
+
+  $$\mathbf{x} = \\{ x\_1, x\_2, ..., x\_N \\}.$$
+
+  Actually we observe $N$ i.i.d realizations of one single Gaussian random variable.
+
+- We suppose that the variance $\sigma^2$ is **deterministic** and **known** while the mean $\mu$ is treated as a **latent variable**.
+
+- The modeling step consists in defining the joint distribution of the observed and latent variables, which factorizes as the product of the likelihood and the prior.
+
+.footnote[In the following, to ease the notations we omit the deterministic parameters of the distributions.]
+
+---
+### Likelihood
+
+  $$\begin{aligned}
+    p(\mathbf{x} | \mu ) &= p(x\_1, x\_2, ..., x\_N | \mu )\\\\
+    &= \prod\_{i=1}^N p(x\_i| \mu )\\\\
+    &= \prod\_{i=1}^N \mathcal{N}(x\_i; \mu , \sigma^2)\\\\
+    &= \prod\_{i=1}^N \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left[ - \frac{(x\_i - \mu)^2}{2 \sigma^2} \right]\\\\
+    &= \frac{1}{(2\pi\sigma^2)^{N/2}} \exp\left[ - \frac{1}{2 \sigma^2} \sum\_{i=1}^N (x\_i - \mu)^2 \right]
+  \end{aligned}$$
+
+ We recall that the ML estimate of the mean is given by $\displaystyle \mu\_{\text{ML}} = \frac{1}{N}\sum\_{i=1}^N x\_i$ .tiny[(proof let as an exercise)].
+
+
+---
+### Prior
+
+We see that the likelihood function takes the form of the exponential of a quadratic form in $\mu$.
+
+Remember that the posterior is proportional to the product of the likelihood and the prior. Therefore, if we choose a Gaussian prior, the posterior will be a product of two exponentials of quadratic functions of $\mu$ and hence will be Gaussian too, making our Bayesian life easy:
+
+$$ p(\mu) = \mathcal{N}(\mu; \mu\_0, \sigma\_0^2) = \frac{1}{\sqrt{2\pi\sigma\_0^2}} \exp\left[ - \frac{(\mu - \mu\_0)^2}{2 \sigma\_0^2} \right], $$
+
+where $\mu\_0$ and $\sigma\_0^2$ are referred to as **hyper-parameters**.
+
+---
+## Inference
+
+--- 
+
+.center.bold[Exercise]
+
+--- 
+
+Applying Bayes' theorem, show that
+
+$$p(\mu | \mathbf{x}) =\mathcal{N}(\mu; \mu\_{\star}, \sigma\_{\star}^2),$$
+
+where 
+
+- $\displaystyle \mu\_{\star} = \frac{\sigma^2}{N\sigma\_0^2 + \sigma^2} \mu\_0 + \frac{N\sigma\_0^2}{N\sigma\_0^2 + \sigma^2} \mu\_{\text{ML}}$
+
+- $\displaystyle \frac{1}{\sigma\_{\star}^2} = \frac{1}{\sigma\_0^2} + \frac{N}{\sigma^2}$
+
+The inverse of the variance is called the **precision**.
+
+--- 
+
+---
+class: center, middle
+
+.width-60[![](images/blackboard.jpg)]
+
+---
+class: center, middle
+
+Open the notebook "Gaussian model with latent mean.ipynb".
+
+.vspace.center.width-80[![](images/jupyter.png)]
+
+
+
+---
+
+- The mean of the posterior distribution is a compromise between the prior mean and the maximum likelihood estimate.
+
+- If the number of observations $N = 0$, the posterior mean and variance reduce to the prior mean and variance.
+
+- For $N \rightarrow +\infty$, the posterior mean is given by the maximum likelihood solution. **The prior has no effect in the "big data" regime**. 
+
+- The precision of the posterior is given by the precision of the prior plus one contribution of the data precision from each of the observed data points. In other words, the precision linearly grows with the number of observed data points. **The more data we have, the higher is the precision, the lower is the variance, the more certain we are about the MAP estimate**. 
+
+- For $N \rightarrow +\infty$, the posterior variance goes to zero, and the posterior distribution becomes infinitely peaked around the maximum likelihood solution. **ML point estimation is recovered from the Bayesian formalism in the limit of an infinite number of observations.**
+
+- For finite $N$, if we take the limit $\sigma\_0^2 \rightarrow +\infty$ then the posterior mean reduces to the ML estimate and the posterior variance is given by $\sigma^2 / N$. **The prior is "not informative" if it is "too flat"**. 
+
+---
+## Homework
+
+- Consider that mean is now a deterministic and known parameter while the variance is a latent random variable following an [inverse-gamma](https://en.wikipedia.org/wiki/Inverse-gamma_distribution) prior distribution:
+
+  $$ p(\sigma^2) = \mathcal{IG}(\sigma^2 ; \alpha, \beta) = \frac{\beta^\alpha}{\Gamma(\alpha)} (\sigma^2)^{-(\alpha+1)} \exp\left( -\frac{\beta}{\sigma^2} \right), $$
+  where $\Gamma(\cdot)$ is the [Gamma function](https://en.wikipedia.org/wiki/Gamma_function).
+
+- The likelihood is still Gaussian: $p(\mathbf{x} | \sigma^2) = \prod\_{i=1}^N \mathcal{N}(x\_i; \mu , \sigma^2)$.
+
+- Show that the posterior is given by:
+
+  $$ p(\sigma^2 | \mathbf{x}) = \mathcal{IG}(\sigma^2 ; \alpha\_\star, \beta\_\star), $$
+
+  where $\displaystyle \alpha\_\star = \alpha + \frac{N}{2}$ and $\displaystyle \beta\_\star = \beta + \frac{1}{2} \sum\_{i=1}^N (x\_i - \mu)^2$.
+
+---
+class: center, middle
+
+# The priors
+
+---
+class: middle
+
+- The inference, and therefore the predictions, decisions and actions which are based on the inference (posterior computation) all depend on the prior.
+- The prior summarizes the information you have about the latent variables of interest, as well as the uncertainty related to this information.
+- The prior is a key ingredient to Bayesian inference, but it is not sufficient, you also need data.
+- The most often criticized aspect of the Bayesian approach to statistical inference is the requirement to choose a prior distribution, and especially the subjectivity of this prior selection procedure. But the whole modeling procedure is in any case inherently subjective, e.g. the likelihood modeling.
+
+.center[**How to convert prior information into prior distributions?**]
+
+---
+## Conjugate priors
+
+.bold[Definition]: A familiy of probability distributions is conjugate for a likelihood function if for every prior in this family the posterior also belongs to this familiy. In other words, if the posterior distribution is in the same family as the prior  distribution, **the prior is conjugate for the likelihood function**. 
+
+- The "structure" of the prior is propagated to the posterior. Computing the posterior consists in **updating the prior parameters using the observations**.
+
+- Using conjugate priors is **simple** and makes inference **tractable** (the marginal likelihood and therefore the posterior can be computed in closed form), but it is also **constraining**.
+
+- For example, the Gaussian distribution is a conjugate prior for the Gaussian likelihood (with known variance); choosing a Gaussian prior over the mean will ensure that the posterior distribution is also Gaussian. 
+
+[Table of conjugate priors for various likelihood functions](https://en.wikipedia.org/wiki/Conjugate_prior#Table_of_conjugate_distributions).
+
+---
+## Non-informative priors
+
+- A non-informative or uninformative prior is a prior distribution which is designed to have a weak influence the posterior distribution. 
+
+- It is useful when we do not have any clear prior beliefs about the latent variables of interest, or we do not want these prior beliefs to influence the inference process.
+
+- A non-informative prior typically yields results which are not too different from conventional statistical analysis, as the likelihood function often yields more information than the non-informative prior.
+
+- Remember the Bayesian Gaussian model with a high variance for the prior on the mean (cf. jupyter notebook).
+
+---
+## Uniform prior
+
+The simplest and oldest rule (suggested by the pioneers of the Bayesian inference, Bayes and Laplace) for determining a non-informative prior is the principle of indifference, which assigns equal probabilities to all possibilities. 
+
+This rule leads a uniform prior:
+
+- Discrete case: $p(z) = 1/K$ for $z \in \\{z\_1, ..., z\_K\\}$.
+- Continuous case: $p(z) \propto 1$ (constant pdf).
+
+
+The uniform prior does not influence the posterior:
+
+$$ p(z | x) \propto p(x |z) p(z) \propto p(x |z). $$
+
+---
+
+- **The uniform prior is not invariant under reparametrization**:
+
+  If we have no information about $z$, we also have no information about $y = g(z) = 1/z$. But a uniform prior over $z$ does not correspond to a uniform prior over $1/z$. 
+  
+  By the change of variable formula:
+
+  $$ p\_Y(y) = p\_Z(g^{-1}(y)) \Big\lvert \frac{d}{dy} g^{-1}(y) \Big\rvert \propto y^{-2} =\not\ constant $$
+
+- **The uniform prior is improper**:
+
+  If the random variable $z$ is real-valued, the uniform prior $p(z) \propto 1$ does not integrate to 1, we say that it is improper. 
+
+  "Improperness" is not always a serious problem since improper priors can lead to proper posteriors.
+
+
+---
+## Jeffreys' prior
+
+In the univariate (i.e. 1-dimensional) case, it is defined by:
+
+$$ p(z) \propto \sqrt{I(z)}, $$
+
+where $I(z)$ is the Fisher information:
+
+$$ I(z) = \mathbb{E}\_{p(x | z)} \left[ \left(\frac{\partial \ln p(x | z)}{ \partial z} \right)^2 \right] = - \mathbb{E}\_{p(x | z)} \left[ \frac{\partial^2 \ln p(x | z)}{ \partial^2 z} \right], $$
+
+with $p(x | z)$ is the likelihood.
+
+In the multivariate case, the prior is proportional to the square root of the determinant of the Fisher information matrix.
+
+---
+
+Jeffreys' prior is invariant under reparametrization:
+
+$$
+\begin{aligned}
+p\_Y(y) &= p\_Z(g^{-1}(y)) \Big\lvert \frac{d}{dy} g^{-1}(y) \Big\rvert\\\\
+&\propto \sqrt{I(g^{-1}(y)) \left(\frac{d}{dy} g^{-1}(y)\right)^2}\\\\
+&= \sqrt{\mathbb{E}\_{p(x | y)} \left[ \left(\frac{\partial \ln p(x | y)}{ \partial g^{-1}(y)} \right)^2 \right] \left(\frac{dg^{-1}(y)}{dy} \right)^2} \\\\
+&= \sqrt{\mathbb{E}\_{p(x | y)} \left[ \left(\frac{\partial \ln p(x | y)}{ \partial g^{-1}(y)} \frac{dg^{-1}(y)}{dy} \right)^2 \right]} \\\\
+&= \sqrt{\mathbb{E}\_{p(x | y)} \left[ \left(\frac{\partial \ln p(x | y)}{dy} \right)^2 \right]} \\\\
+& = \sqrt{I(y)}.
+\end{aligned}
+$$
+
+---
+## Hierarchical prior
+
+- Considering a conjugate prior $p(z ; \theta\_z)$ may be too restrictive. 
+
+- Instead of treating $\theta\_z$ as a deterministic (hyper)parameters, we could consider it as another latent random variable, equipped with a prior $p(\theta\_z ; \lambda )$.
+
+- The resulting prior over $z$ is hierarchical, i.e. it is expressed as a marginal distribution:
+
+  $$ p(z ; \gamma) = \int p(z, \theta\_z ; \gamma) d\theta\_z = \int p(z | \theta\_z) p(\theta\_z; \gamma) d\theta\,$$
+
+- This prior is not conjugate anymore and it is "more expressive".
+
+.vspace[
+
+
+]
+
+.italic[What we treat as a (hyper)parameter or as a random variable is quite arbitrary and problem-dependent.]
+
+---
+### Student's t distribution example
+
+$$\begin{cases}
+p(x | v) &= \mathcal{N} \left(x; \mu, v \right) \\\\[.25cm]
+p(v) &= \mathcal{IG}\left(v; \displaystyle \frac{\alpha}{2}, \frac{\alpha}{2} \lambda^2\right)
+\end{cases}  \hspace{.5cm} \Leftrightarrow \hspace{.5cm}  p(x) = \int\_{0}^{+\infty} p(x | v) p(v) dv = \mathcal{T}_{\alpha}(x; \mu, \lambda)  $$
+$$
+where
+- $\small \mathcal{N} \left(x; \mu, \sigma^2 \right) = \displaystyle \frac{1}{\sqrt{2\pi \sigma^2}} \exp\left[ \displaystyle \frac{(x-\mu)^2}{2\sigma^2} \right]$ .tiny[is the [Gaussian distribution](https://en.wikipedia.org/wiki/Normal_distribution) ].
+
+- $\small \mathcal{IG}(x; \alpha, \beta) = \displaystyle \frac{\beta^\alpha}{\Gamma(\alpha)} x^{-(\alpha + 1)}\exp\left(-\beta/x\right) $ .tiny[ is the [inverse-gamma distribution](https://en.wikipedia.org/wiki/Inverse-gamma_distribution) ].
+
+- $\small \mathcal{T}_{\alpha}(x; \mu, \lambda) = \displaystyle \frac{\Gamma(\frac{\alpha + 1}{2})}{\Gamma(\frac{\alpha}{2})\sqrt{\pi\alpha}\lambda\,} \left(1+\frac{1}{\alpha} \frac{ (x- \mu)^2 } {\lambda^2}\right)^{-\frac{\alpha+1}{2}}$ .tiny[is the [Student's t distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution#Generalized_Student's_t-distribution)].
+
+--
+count: false
+
+---  
+
+.footnote[
+
+.left-column[
+
+Hints for the proof (exercise): 
+- 1st change of variable: $ u = v \left( \frac{(x-u)^2}{2} + \frac{\alpha}{2}\lambda^2 \right) $
+
+]
+
+.right-column[
+- 2nd change of variable: $ t = 1/u$
+- Recognize the Gamma function $ \Gamma(z) = \int_0^\infty t^{z-1} e^{-t}\, dt$ for $z = (\alpha + 1)/2$.
+
+]
+
+
+
+]
+
+---
+
+### Student's t distribution example
+
+$$\begin{cases}
+p(x | v) &= \mathcal{N} \left(x; \mu, v \right) \\\\[.25cm]
+p(v) &= \mathcal{IG}\left(v; \displaystyle \frac{\alpha}{2}, \frac{\alpha}{2} \lambda^2\right)
+\end{cases}  \hspace{.5cm} \Leftrightarrow \hspace{.5cm}  p(x) = \int\_{0}^{+\infty} p(x | v) p(v) dv = \mathcal{T}_{\alpha}(x; \mu, \lambda)  $$
+$$
+
+.vspace[
+
+.center[.width-50[![](images/studentsT_pdf_logy.svg)]]
+
+]
+
+It is a heavy-tailed distribution. It is more flexible than the Gaussian in the sense that it allows $x$ to take values that are "far from the mode".
+
+---
+class: center, middle
+
+# Natural image prior example
+
+---
+class: middle
+
+$$ \mathbf{x} = \mathbf{H} \mathbf{z} + \boldsymbol{\epsilon}, \qquad \boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \sigma\_\epsilon^2 \mathbf{I}). $$
+
+- $\mathbf{x}$ is a noisy and/or incomplete image (e.g. motion blur, additive noise, missing pixels);
+- $\mathbf{z}$ is the **latent** clean image;
+- $\mathbf{H}$ encodes the linear transform (e.g. convolution) from the clean image to the noisy one;
+- $\boldsymbol{\epsilon}$ is an additive Gaussian noise.
+
+Image reconstruction (inpainting, denoising, deblurring) consists in computing $p(\mathbf{z} | \mathbf{x}) \propto p(\mathbf{x} | \mathbf{z}) p(\mathbf{z})$.
+
+---
+class: middle
+
+$$ \mathbf{x} = \mathbf{H} \mathbf{G} \mathbf{z} + \boldsymbol{\epsilon}, \qquad \boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \sigma\_\epsilon^2 \mathbf{I}). $$
+
+- $\mathbf{x}$ is a noisy and/or incomplete image (e.g. motion blur, additive noise, missing pixels);
+- $\mathbf{z}$ is the **latent** ***horizonal gradient of the*** clean image;
+- ***$\mathbf{G}^{-1}$ is the linear operator which computes the horizontal gradient of an image***;
+- $\mathbf{H}$ encodes the linear transform (e.g. convolution) from the clean image to the noisy one;
+- $\boldsymbol{\epsilon}$ is an additive Gaussian noise.
+
+Image reconstruction (inpainting, denoising, deblurring) consists in computing $p(\mathbf{z} | \mathbf{x}) \propto p(\mathbf{x} | \mathbf{z}) p(\mathbf{z})$ and ***somehow reconstruct the image from its gradient***.
+
+
+???
+
+for $n=1,...N$, $y\_n = x\_n - x\_{n-1}$
+
+Assume $x\_{1}$ is known, we have for $n>1$
+
+$ x\_n = y\_n + x\_{n-1} $.
+
+---
+
+The likelihood is given by:
+
+$$ p(\mathbf{x} | \mathbf{z}) = \mathcal{N}(\mathbf{x}; \mathbf{H}\mathbf{G} \mathbf{z}, \sigma\_\epsilon^2 \mathbf{I}). $$
+
+To fully define the model, we also need a prior $p(\mathbf{z})$ for the gradient of the image.
+
+The conjugate prior for this likelihood function is Gaussian (assuming zero mean):
+
+$$ p(\mathbf{z}) = \prod\_{i} \mathcal{N}(z\_i; 0, \sigma\_z^2). $$
+
+Let's check if the distribution of the gradient of an image is indeed Gaussian.
+
+
+---
+
+We first load an image.
+
+
+.left-column[
+
+``` 
+from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import t
+from scipy.stats import norm*
+
+im = np.array(Image.open('cameraman.png'))/255*2 - 1
+
+plt.figure(figsize=(7,7))
+plt.imshow(im, cmap='gray')
+
+```
+
+]
+
+.right-column[
+
+.center.width-100[![](images/cameraman.svg)]
+
+]
+
+
+---
+
+Then we compute the horizontal gradient.
+
+.left-column[
+
+``` 
+grad_x = np.diff(im)
+grad_x_vec = grad_x.flatten()
+
+plt.figure(figsize=(7,7))
+plt.imshow(grad_x, cmap='gray')
+plt.colorbar()
+
+```
+
+.vspace[
+
+
+]
+
+**Can you guess what does the histogram of this image (once vectorized) look like?**
+
+]
+
+.right-column[
+
+.center.width-100[![](images/cameraman_grad.svg)]
+
+]
+
+---
+
+We fit a Gaussian distribution using maximum likelihood, and we compare the estimated pdf with the histogram of the gradient.
+
+```
+(mean, std) = norm.fit(grad_x_vec)
+
+```
+
+.center.width-90[![](images/cameraman_gaussian_linear.svg)]
+
+
+
+
+---
+
+Same plot with a log scale on the y-axis.
+
+.center.width-90[![](images/cameraman_gaussian_log.svg)]
+
+.center[**The distribution of the gradient of the image is clearly not Gaussian.**
+
+Choosing a Gaussian conjugate prior is too restrictive, and actually not a good idea here, so let's get hierarchical!
+
+]
+
+---
+
+We fit a Student's t distribution on the gradient of the image.
+
+```
+(shape, loc, scale) = t.fit(grad_x_vec)
+
+```
+
+.center.width-90[![](images/cameraman_gaussian_student_log.svg)]
+
+.center[Much better!]
+
+---
+
+Our hierarchical prior is $p(\mathbf{z} | \mathbf{v}) = \prod\_{i} p(z\_i | v\_i) p(v\_i)$, where
+$$\begin{cases}
+p(z\_i | v\_i) &= \mathcal{N}(z\_i; 0, v\_i) \\\\[.25cm]
+p(v\_i) &= \mathcal{IG}\left(v\_i; \displaystyle \frac{\alpha}{2}, \frac{\alpha}{2} \lambda^2\right)
+\end{cases},
+$$
+
+which is equivalent to $p(\mathbf{z}) = \prod\_{i} p(z\_i)$ with
+
+$$p(z\_i) = \int\_{0}^{+\infty} p(z\_i | v\_i) p(v\_i) dv\_i = \mathcal{T}_{\alpha}(z\_i; 0, \lambda).$$
+
+---
+
+.center.width-90[![](images/VB_image_deconv.png)]
+
+---
+class: center, middle
+# Example applications of Bayesian inference
+
+---
+
+See [https://ermongroup.github.io/cs228-notes/preliminaries/applications/](https://ermongroup.github.io/cs228-notes/preliminaries/applications/)
+
+.left-column[
+
+Images
+- Generation
+- Inpainting
+- Denoising
+
+Language
+- Generation
+- Translation
+
+Health Care and Medicine
+- Diagnosis
+
+]
+
+.right-column[
+
+Audio
+- Super-Resolution
+- Speech Synthesis
+- Speech Recognition
+
+Other
+- Error-Correcting Codes
+- Computational Biology
+- Ecology
+- Economics
+
+]
+
+---
+## Kaggle contest on Observing Dark World
+
+From [Observing Dark World](https://www.kaggle.com/c/DarkWorlds):
+
+.block-center-70[
+"There is more to the Universe than meets the eye. Out in the cosmos exists a form of matter that outnumbers the stuff we can see by almost 7 to 1, and we don’t know what it is. What we do know is that it does not emit or absorb light, so we call it Dark Matter. Such a vast amount of aggregated matter does not go unnoticed. In fact we observe that this stuff aggregates and forms massive structures called Dark Matter Halos. Although dark, it warps and bends spacetime such that any light from a background galaxy which passes close to the Dark Matter will have its path altered and changed. This bending causes the galaxy to appear as an ellipse in the sky."
+]
+
+The contest required predictions about where dark matter was likely to be. The winner, Tim Salimans, used Bayesian inference to find the best locations for the halos (interestingly, the second-place winner also used Bayesian inference).
+
+
+---
+
+Tim Salimans' solution ([source](https://nbviewer.jupyter.org/github/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers/blob/master/Chapter5_LossFunctions/Ch5_LossFunctions_PyMC2.ipynb))
+:
+
+- Construct a prior distribution for the halo positions $p(z)$, i.e. formulate our expectations about the halo positions before looking at the data.
+- Construct a probabilistic model for the data (observed ellipticities of the galaxies) given the positions of the dark matter halos: $p(x|z)$.
+- Use Bayes’ rule to get the posterior distribution of the halo positions: $p(z|x)$, i.e. use the data to guess where the dark matter halos might be.
+- Minimize the expected loss with respect to the posterior distribution over the predictions for the halo positions: $z^\star = \underset{\hat{z}}{\arg\min}\, \mathbb{E}\_{p(z|x)}[\mathcal{L}(\hat{z},z)]$ , i.e. tune our predictions to be as good as possible for the given error metric.
+
+The loss function in this problem is very complicated, it is about 160 lines of code, not something that can be written down in a single mathematical line.
+
+
+
+
+
+---
+## Audio source separation
+
+.center[.width-90[![](images/illust_MASS_modelisation.svg)]]
+
+---
+
+.center[.width-70[![](images/bayesianNetwork_2.svg)]]
+
+.center[.width-60[![](images/SSMM.png)]]
+
+
+
+---
+
+.center[.width-90[![](images/illust_MASS_posterior.svg)]]
+
+---
+
+.grid[
+
+.kol-1-3[
+  .center[Original sources]
+]
+.kol-1-3[
+  .center[Mixture]
+]
+.kol-1-3[
+  .center[Estimated sources]
+]
+
+.kol-1-3[
+  .width-100[![](images/bass_orig_waveform.png)]
+]
+.kol-1-3[
+]
+.kol-1-3[
+  .width-100[![](images/bass_SSMM_waveform.png)]
+]
+
+.kol-1-3[
+  .width-100[![](images/drums_orig_waveform.png)]
+]
+.kol-1-3[
+  .width-100[![](images/mix_waveform.png)]
+]
+.kol-1-3[
+  .width-100[![](images/drums_SSMM_waveform.png)]
+]
+
+.kol-1-3[
+  .width-100[![](images/gtr_orig_waveform.png)]
+]
+.kol-1-3[
+]
+.kol-1-3[
+  .width-100[![](images/gtr_SSMM_waveform.png)]
+]
+
+]
+
+---
+class: center, middle
+
+<table>
+<thead>
+  <tr>
+    <th>Mixture</th>
+    <td>
+    <audio controls style="width: 250px;">
+      <source src="sounds/SSMM_610_kismet_cut/mix.wav" width=50%>
+    </audio>    
+    </td>
+  </tr>
+</thead>
+</table>
+
+.vspace[
+
+]
+
+<table>
+<thead>
+  <tr>
+    <th></th>
+    <th>Orginal audio sources</th>
+    <th>Estimated audio sources</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Bass</td>
+    <td>
+    <audio controls style="width: 250px;">
+      <source src="sounds/SSMM_610_kismet_cut/bass_orig.wav" width=50%>
+    </audio>    
+    </td>
+    <td>
+    <audio controls style="width: 250px;">
+      <source src="sounds/SSMM_610_kismet_cut/bass_SSMM.wav" width=50%>
+    </audio>  
+    </td>
+  </tr>
+  <tr>
+    <td>Drums</td>
+    <td>
+    <audio controls style="width: 250px;">
+      <source src="sounds/SSMM_610_kismet_cut/drums_orig.wav" width=50%>
+    </audio>    
+    </td>
+    <td>
+    <audio controls style="width: 250px;">
+      <source src="sounds/SSMM_610_kismet_cut/drums_SSMM.wav" width=50%>
+    </audio>  
+    </td>
+  </tr>
+  <tr>
+    <td>Guitar</td>
+    <td>
+    <audio controls style="width: 250px;">
+      <source src="sounds/SSMM_610_kismet_cut/gtr_orig.wav" width=50%>
+    </audio>    
+    </td>
+    <td>
+    <audio controls style="width: 250px;">
+      <source src="sounds/SSMM_610_kismet_cut/gtr_SSMM.wav" width=50%>
+    </audio>  
+    </td>
+  </tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+</textarea>
+
+
+
+
+
+
+
+
+
+<script src="../assets/remark-latest.min.js"></script>
+<script src="../assets/auto-render.min.js"></script>
+<script src="../assets/katex.min.js"></script>
+<script type="text/javascript">
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    var options = {sourceUrl: getParameterByName("p"),
+                    highlightLanguage: "python",
+                    // highlightStyle: "tomorrow",
+                    // highlightStyle: "default",
+                    highlightStyle: "github",
+                    // highlightStyle: "googlecode",
+                    // highlightStyle: "zenburn",
+                    highlightSpans: true,
+                    highlightLines: true,
+                    ratio: "16:9"};
+
+    var renderMath = function() {
+        renderMathInElement(document.body, {delimiters: [ // mind the order of delimiters(!?)
+            {left: "$$", right: "$$", display: true},
+            {left: "$", right: "$", display: false},
+            {left: "\\[", right: "\\]", display: true},
+            {left: "\\(", right: "\\)", display: false},
+        ]});
+    }
+  var slideshow = remark.create(options, renderMath);
+</script>
+</body>
+</html>

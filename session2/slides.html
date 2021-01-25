@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bayesian Methods for Machine Learning</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <link rel="stylesheet" href="../assets/katex.min.css">
+  <link rel="stylesheet" type="text/css" href="../assets/slides.css">
+  <link rel="stylesheet" type="text/css" href="../assets/grid.css">
+<!-- Change equation font color defined in ../assests/slides.css -->
+<script type="text/javascript">
+  document.documentElement.style
+  .setProperty('--eq_font_color', '#004c86');
+</script>
+</head>
+<body>
+
+<textarea id="source">
+
+class: middle
+
+.center[
+
+
+<br/>
+# Bayesian Methods for Machine Learning
+
+.small-vspace[
+
+]
+
+### Lecture 2 - Fundamentals of machine learning
+
+<br/><br/>
+.bold[Simon Leglaive]
+<br/>
+<br/>
+
+<br/><br/>
+.tiny[CentraleSupélec, 2020-2021]
+
+]
+
+.credit[This presentation is adapted from [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning) course by [Gilles Louppe](https://glouppe.github.io/) at ULiège.]
+
+---
+.center.width-70[![](images/ML_types.png)]
+
+Today, we will focus on **supervised learning**.
+
+.credit[Image credits: Kamil Krzyk, [Types of Machine Learning](https://www.experfy.com/blog/coding-deep-learning-for-beginners-types-of-machine-learning/)]
+
+---
+
+## Supervised learning
+
+Consider an unknown joint probability distribution $p^\star(\mathbf{x},y)$.
+
+Assume training data $\mathcal{D} = \\{(\mathbf{x}\_i,y\_i) \in \mathcal{X} \times \mathcal{Y} \\}\_{i=1, ..., N}$ where
+$$(\mathbf{x}\_i,y\_i) \sim p^\star(\mathbf{x},y).$$
+
+- For instance $\mathbf{x}\_i$ is a $p$-dimensional input feature vector and $y\_i$ is a scalar label (e.g., a category or a real value).
+- The training data is generated i.i.d.
+- The training data can be of any finite size $N$.
+- In general, we do not have any prior information about $p^\star(\mathbf{x},y)$.
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+???
+
+In most cases, x is a vector, but it could be an image, a piece of text or a sample of sound.
+
+---
+
+## Inference
+
+Supervised learning is usually concerned with the two following inference problems:
+
+- **Classification**: Given $\mathcal{D} = \\{(\mathbf{x}\_i,y\_i) \in \mathcal{X} \times \mathcal{Y} = \mathbb{R}^p \times \\\{1, ..., C\\\} \\}\_{i=1, ..., N}$, we want to estimate for any .bold[new] input $\mathbf{x}$: 
+
+$$\arg \max\_y p(y|\mathbf{x}).$$
+
+- **Regression**: Given $\mathcal{D} = \\{(\mathbf{x}\_i,y\_i) \in \mathcal{X} \times \mathcal{Y} = \mathbb{R}^p \times \mathbb{R} \\}\_{i=1, ..., N}$, we want to estimate for any .bold[new] input $\mathbf{x}$: 
+
+$$\mathbb{E}\_{p(y|\mathbf{x})}\left[ y \right] = \int\_{\mathcal{Y}} y\, p(y|\mathbf{x}) dy .$$
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+---
+
+class: middle
+
+Or more generally, inference consists in computing the posterior distribution 
+
+$$p(y|\mathbf{x})$$ 
+
+for any new $\mathbf{x}$ (i.e. that was not part of the training dataset).
+
+
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+.center[
+![](images/classification.png)
+
+Classification consists in identifying<br>
+a decision boundary between objects of distinct classes.
+]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+.center[
+![](images/regression.png)
+
+Regression aims at estimating relationships among (usually continuous) variables.
+]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+## Empirical risk minimization
+
+Consider a function $f : \mathcal{X} \to \mathcal{Y}$ produced by some learning algorithm. The predictions
+of this function can be evaluated through a loss
+$$\ell : \mathcal{Y} \times  \mathcal{Y} \to \mathbb{R},$$
+such that $\ell(y, f(\mathbf{x})) \geq 0$ measures how close the prediction $f(\mathbf{x})$ from $y$ is.
+
+<br>
+### Examples of loss functions
+
+
+.grid[
+.kol-1-3[Classification:]
+.kol-2-3[$\ell(y,f(\mathbf{x})) = \mathbf{1}\_{y \cancel= f(\mathbf{x})}$]
+]
+.grid[
+.kol-1-3[Regression:]
+.kol-2-3[$\ell(y,f(\mathbf{x})) = (y - f(\mathbf{x}))^2$]
+]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+Let $\mathcal{F}$ denote the hypothesis space, i.e. the set of all functions $f$ than can be produced by the chosen learning algorithm.
+
+We are looking for a function $f \in \mathcal{F}$ with a small **expected risk** (or generalization error)
+$$R(f) = \mathbb{E}\_{p^\star(\mathbf{x},y)}\left[ \ell(y, f(\mathbf{x})) \right] = \mathbb{E}\_{p^\star(\mathbf{x})}\left[ \mathbb{E}\_{p^\star(y| \mathbf{x})}\left[ \ell(y, f(\mathbf{x})) \right] \right].$$
+
+This means that for a given data generating distribution $p^\star(\mathbf{x},y)$ and for a given hypothesis space $\mathcal{F}$,
+the optimal model is
+$$f^\star = \arg \min\_{f \in \mathcal{F}} R(f).$$
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+Unfortunately, since $p^\star(\mathbf{x},y)$ is unknown, the expected risk cannot be evaluated and the optimal
+model cannot be determined.
+
+However, if we have i.i.d. training data $\mathcal{D} = \\\{(\mathbf{x}\_i, y\_i) \\\}\_{i=1,\ldots,N}$, we can
+compute an estimate, the **empirical risk** (or training error)
+$$\hat{R}(f, \mathcal{D}) = \frac{1}{N} \sum\_{(\mathbf{x}\_i, y\_i) \in \mathcal{D}} \ell(y\_i, f(\mathbf{x}\_i)).$$
+
+This estimate is *unbiased* and can be used for finding a good enough approximation of $f^\star$. This results into the **empirical risk minimization principle**:
+$$f^\star\_{\mathcal{D}} = \arg \min\_{f \in \mathcal{F}} \hat{R}(f, \mathcal{D})$$
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+???
+
+What does unbiased mean?
+
+=> The expected empirical risk estimate (over d) is the expected risk.
+
+---
+
+class: middle
+
+Most machine learning algorithms, including **neural networks**, implement empirical risk minimization.
+
+Under regularity assumptions, empirical risk minimizers converge:
+
+$$\lim\_{N \to \infty} f^\star\_{\mathcal{D}} = f^\star$$
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+???
+
+This is why tuning the parameters of the model to make it work on the training data is a reasonable thing to do.
+
+---
+
+## Regression example
+
+.center[![](images/data.png)]
+
+Consider the joint probability distribution $p^\star(x,y)$ induced by the data generating
+process
+$$(x,y) \sim p^\star(x,y) \Leftrightarrow x \sim \mathcal{U}([-10;10]), \epsilon \sim \mathcal{N}(0, \sigma^2), y = g(x) + \epsilon$$
+where $x \in \mathbb{R}$, $y\in\mathbb{R}$ and $g$ is an unknown polynomial of degree 3.
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+.center.width-70[![](images/regression.jpg)]
+
+Regression is used to study the relationship between two continuous variables. 
+
+Of course, it can be extended to higher dimensions.
+
+.credit[Image credit: https://noeliagorod.com/2019/05/21/machine-learning-for-everyone-in-simple-words-with-real-world-examples-yes-again/]
+
+???
+
+Regression examples:
+
+
+- predict the hospitalization time given your medical record
+- predict the rate for your insurance when taking a credit for buying a house given all your presonal data
+- predict your click rate in online advertising given your navigation history
+- predict the temperature given carbon emission rates
+- predict your age given a picture of you
+- predict a picture of you in 10 years given a picture of you today
+
+
+---
+
+class: middle
+
+## Step 1: Defining the model
+
+Our goal is to find a function $f$ that makes good predictions on average over $p^\star(x,y)$.
+
+Consider the hypothesis space $f \in \mathcal{F}$ of polynomials of degree 3 defined through their parameters $\mathbf{w} \in \mathbb{R}^4$ such that
+$$\hat{y} \triangleq f(x; \mathbf{w}) = \sum\_{d=0}^3 w\_d x^d$$  
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+## Step 2: Defining the loss function
+
+For this regression problem, we use the squared error loss
+$$\ell(y, f(x;\mathbf{w})) = (y - f(x;\mathbf{w}))^2$$
+to measure how wrong the predictions are.
+
+Therefore, our goal is to find the best value $\mathbf{w}^\star$ such
+$$\begin{aligned}
+\mathbf{w}^\star &= \arg\min\_\mathbf{w} R(\mathbf{w}) \\\\
+&= \arg\min\_\mathbf{w}  \mathbb{E}\_{p^\star(x,y)}\left[ (y-f(x;\mathbf{w}))^2 \right]
+\end{aligned}$$
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+## Step 3: Training
+
+Given a large enough training set $\mathcal{D} = \\\{(x\_i, y\_i) | i=1,\ldots,N\\\}$, the
+empirical risk minimization principle tells us that a good estimate $\mathbf{w}^\star\_{\mathcal{D}}$ of $\mathbf{w}^\star$ can be found by minimizing the empirical risk:
+$$\begin{aligned}
+\mathbf{w}^\star\_{\mathcal{D}} &= \arg\min\_\mathbf{w} \hat{R}(\mathbf{w},\mathcal{D}) \\\\
+&= \arg\min\_\mathbf{w} \frac{1}{N}  \sum\_{(x\_i, y\_i) \in \mathcal{D}} (y\_i - f(x\_i;\mathbf{w}))^2 \\\\
+&= \arg\min\_\mathbf{w} \frac{1}{N}  \sum\_{(x\_i, y\_i) \in \mathcal{D}} \Big(y\_i - \sum\_{d=0}^3 w\_d x\_i^d\Big)^2 \\\\
+&= \arg\min\_\mathbf{w} \frac{1}{N} \left\lVert
+\underbrace{\begin{pmatrix}
+y\_1 \\\\
+y\_2 \\\\
+\ldots \\\\
+y\_N
+\end{pmatrix}}\_{\mathbf{y}} -
+\underbrace{\begin{pmatrix}
+x\_1^0 \ldots x\_1^3 \\\\
+x\_2^0 \ldots x\_2^3 \\\\
+\ldots \\\\
+x\_N^0 \ldots x\_N^3
+\end{pmatrix}}\_{\mathbf{X}}
+\begin{pmatrix}
+w\_0 \\\\
+w\_1 \\\\
+w\_2 \\\\
+w\_3
+\end{pmatrix}
+\right\rVert^2
+\end{aligned}$$
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+This is **ordinary least squares** regression, for which the solution is known analytically:
+$$\mathbf{w}^\star\_{\mathcal{D}} = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}$$
+
+.center[![](images/poly-3.png)]
+
+In many situations, the problem is more difficult and we cannot find the solution analytically. We resort to .bold[iterative optimization algorithms], such as (variants of) gradient descent.
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+The expected risk minimizer $f(x;\mathbf{w}^\star)$ within our hypothesis space $\mathcal{F}$ (polynomials of degree 3) is $g(x)$ itself (i.e. the polynomial of degree 3 with the true parameters).
+
+Therefore, on this toy problem, we can verify that
+$f(x;\mathbf{w}^\star\_{\mathcal{D}}) \to f(x;\mathbf{w}^\star) = g(x)$ as $N \to \infty$.
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+.center[![](images/poly-N-5.png)]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+count: false
+
+.center[![](images/poly-N-10.png)]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+count: false
+
+.center[![](images/poly-N-50.png)]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+count: false
+
+.center[![](images/poly-N-100.png)]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+count: false
+
+.center[![](images/poly-N-500.png)]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+
+---
+
+class: middle
+
+What if we consider a hypothesis space $\mathcal{F}$ in which candidate functions $f$ are either too "simple" or too "complex" with respect to the true data generating process?
+
+
+.center[![](images/poly-1.png)]
+
+.center[$\mathcal{F}$ = polynomials of degree 1]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+count: false
+
+What if we consider a hypothesis space $\mathcal{F}$ in which candidate functions $f$ are either too "simple" or too "complex" with respect to the true data generating process?
+
+
+.center[![](images/poly-2.png)]
+
+.center[$\mathcal{F}$ = polynomials of degree 2]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+count: false
+
+What if we consider a hypothesis space $\mathcal{F}$ in which candidate functions $f$ are either too "simple" or too "complex" with respect to the true data generating process?
+
+
+.center[![](images/poly-3.png)]
+
+.center[$\mathcal{F}$ = polynomials of degree 3]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+count: false
+
+What if we consider a hypothesis space $\mathcal{F}$ in which candidate functions $f$ are either too "simple" or too "complex" with respect to the true data generating process?
+
+
+.center[![](images/poly-4.png)]
+
+.center[$\mathcal{F}$ = polynomials of degree 4]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+count: false
+
+What if we consider a hypothesis space $\mathcal{F}$ in which candidate functions $f$ are either too "simple" or too "complex" with respect to the true data generating process?
+
+
+.center[![](images/poly-5.png)]
+
+.center[$\mathcal{F}$ = polynomials of degree 5]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+count: false
+
+What if we consider a hypothesis space $\mathcal{F}$ in which candidate functions $f$ are either too "simple" or too "complex" with respect to the true data generating process?
+
+
+.center[![](images/poly-10.png)]
+
+.center[$\mathcal{F}$ = polynomials of degree 10]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+.center[
+![](images/training-error.png)
+
+Error vs. degree $d$ of the polynomial.
+]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+???
+
+Why shouldn't we pick the largest $d$?
+
+---
+
+class: middle
+
+## Bayes risk and model
+
+Let $\mathcal{Y}^{\mathcal X}$ be the set of all functions $f : \mathcal{X} \to \mathcal{Y}$.
+
+We define the **Bayes risk** as the minimal expected risk over all possible functions,
+$$R\_B = \min\_{f \in \mathcal{Y}^{\mathcal X}} R(f),$$
+and call **Bayes model** the model $f_B$ that achieves this minimum.
+
+.bold[No model $f$ can perform better than $f\_B$.]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+The **capacity** of an hypothesis space $\mathcal{F}$ induced by a learning algorithm intuitively represents the ability to
+find a good model $f \in \mathcal{F}$ that can fit any function, regardless of its complexity.
+
+In practice, capacity can be controlled through hyper-parameters of the learning algorithm. For example:
+- The degree of the family of polynomials;
+- The number of layers in a neural network;
+- The number of training iterations;
+- Regularization terms.
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+## Underfitting and overfitting
+
+- If the capacity of $\mathcal{F}$ is too low, then $f\_B \notin \mathcal{F}$ and $R(f) - R\_B$ is large for any $f \in \mathcal{F}$, including $f^\star$ and $f^\star\_{\mathcal{D}}$. Such models $f$ are said to **underfit** the data.
+- If the capacity of $\mathcal{F}$  is too high, then $f\_B \in \mathcal{F}$ or $R(f^\star) - R\_B$ is small.<br>
+However, because of the high capacity of the hypothesis space, the empirical risk minimizer $f^\star\_{\mathcal{D}}$ could fit the training data arbitrarily well such that 
+
+  $$R(f^\star\_{\mathcal{D}}) \geq R\_B \geq \hat{R}(f^\star\_{\mathcal{D}}, \mathcal{D}) \geq 0.$$
+
+  This indicates that the empirical risk $\hat{R}(f^\star\_{\mathcal{D}}, \mathcal{D})$ is a poor estimator of the expected risk $R(f^\star\_{\mathcal{D}})$. In this situation, $f^\star\_{\mathcal{D}}$ becomes too specialized with respect to the true data generating process, $f^\star\_{\mathcal{D}}$ is said to **overfit** the data.
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+Therefore, our goal is to adjust the capacity of the hypothesis space such that
+the **expected risk** of the empirical risk minimizer (the generalization error) $R(f^\star\_{\mathcal{D}})$ gets as low as possible, and not simply the **empirical risk** of the empirical risk minimizer (training error) $\hat{R}(f^\star\_{\mathcal{D}}, \mathcal{D})$.
+
+.center[![](images/underoverfitting.png)]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+???
+
+Comment that for deep networks, training error may goes to 0 while the generalization error may not necessarily go up!
+
+---
+
+class: middle
+
+
+An unbiased estimate of the expected risk can be obtained by evaluating $f^\star\_{\mathcal{D}}$ on data $\mathcal{D}\_\text{test}$ independent from the training samples $\mathcal{D}$:
+$$\hat{R}(f^\star\_{\mathcal{D}}, \mathcal{D}\_\text{test}) =  \frac{1}{N\_\text{test}} \sum\_{(\mathbf{x}\_i, y\_i) \in \mathcal{D}\_\text{test}} \ell(y\_i, f^\star\_{\mathcal{D}}(\mathbf{x}\_i))$$
+
+This **test error** estimate can be used to evaluate the actual performance of the model. However, it should not be used, at the same time, for model selection.
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+.center[
+![](images/training-test-error.png)
+
+Error vs. degree $d$ of the polynomial.
+]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+???
+
+What value of $d$ shall you select?
+
+But then how good is this selected model?
+
+---
+
+class: middle
+
+### (Proper) evaluation protocol
+
+.center[![](images/protocol1.png)]
+
+There may be over-fitting, but it does not bias the final performance evaluation.
+
+.credit[Credits: Francois Fleuret, [EE559 Deep Learning](https://fleuret.org/ee559/), EPFL.]
+
+---
+
+class: middle
+
+.center[![](images/protocol2.png)]
+
+.center[This should be **avoided** at all costs!]
+
+.credit[Credits: Francois Fleuret, [EE559 Deep Learning](https://fleuret.org/ee559/), EPFL.]
+
+---
+
+class: middle
+
+.center[![](images/protocol3.png)]
+
+.center[Instead, keep a separate validation set for tuning the hyper-parameters.]
+
+.credit[Credits: Francois Fleuret, [EE559 Deep Learning](https://fleuret.org/ee559/), EPFL.]
+
+???
+
+Comment on the comparison of algorithms from one paper to the other.
+
+---
+
+## Bias-variance decomposition
+
+Consider a **fixed point** $x$ and the prediction $\hat{y}=f^\star\_{\mathcal{D}}(x)$ of the empirical risk minimizer at $x$.
+
+Then the local expected risk of $f^\star\_{\mathcal{D}}$ is
+$$\begin{aligned}
+R(f^\star\_{\mathcal{D}}|x) &= \mathbb{E}\_{p^\star(y|x)} \left[ (y - f^\star\_{\mathcal{D}}(x))^2 \right] \\\\
+&= \mathbb{E}\_{p^\star(y|x)} \left[ (y - f\_B(x) + f\_B(x) - f^\star\_{\mathcal{D}}(x))^2 \right]  \\\\
+&= \mathbb{E}\_{p^\star(y|x)} \left[ (y - f\_B(x))^2 \right] + \mathbb{E}\_{ p^\star(y|x)} \left[ (f\_B(x) - f^\star\_{\mathcal{D}}(x))^2 \right] \\\\
+&= R(f\_B|x) + (f\_B(x) - f^\star\_{\mathcal{D}}(x))^2
+\end{aligned}$$
+where
+- $R(f\_B|x)$ is the local expected risk of the Bayes model. This term cannot be reduced.
+- $(f\_B(x) - f^\star\_{\mathcal{D}}(x))^2$ represents the discrepancy between $f\_B$ and $f^\star\_{\mathcal{D}}$.
+
+.vspace[
+
+]
+.tiny[Note that:] $\scriptsize R(f) = \mathbb{E}\_{p^\star(\mathbf{x},y)}\left[ \ell(y, f(\mathbf{x})) \right] = \mathbb{E}\_{p^\star(\mathbf{x})}\left[ \mathbb{E}\_{p^\star(y| \mathbf{x})}\left[ \ell(y, f(\mathbf{x})) \right] \right] = \mathbb{E}\_{p^\star(\mathbf{x})}\left[ R(f | x) \right]$
+
+---
+
+class: middle
+
+If $\mathcal{D}$ is itself considered as a random variable, then $f^\star\_{\mathcal{D}}$ is also a random variable, along with its predictions $\hat{y}$.
+
+---
+
+class: middle
+
+.center[![](images/poly-avg-degree-1.png)]
+
+???
+
+What do you observe?
+
+---
+
+class: middle
+count: false
+
+.center[![](images/poly-avg-degree-2.png)]
+
+---
+
+class: middle
+count: false
+
+.center[![](images/poly-avg-degree-3.png)]
+
+---
+
+class: middle
+count: false
+
+.center[![](images/poly-avg-degree-4.png)]
+
+---
+
+class: middle
+count: false
+
+.center[![](images/poly-avg-degree-5.png)]
+
+---
+
+class: middle
+
+Formally, the expected local expected risk yields to:
+$$\begin{aligned}
+&\mathbb{E}\_\mathcal{D} \left[ R(f^\star\_{\mathcal{D}}|x) \right] \\\\
+&= \mathbb{E}\_\mathcal{D} \left[ R(f\_B|x) + (f\_B(x) - f^\star\_{\mathcal{D}}(x))^2 \right]  \\\\
+&=  R(f\_B|x) + \mathbb{E}\_\mathcal{D} \left[ (f\_B(x) - f^\star\_{\mathcal{D}}(x))^2 \right] \\\\
+&= \underbrace{R(f\_B|x)}\_{\text{noise}(x)} + \underbrace{(f\_B(x) - \mathbb{E}\_\mathcal{D}\left[ f^\star\_{\mathcal{D}}(x) \right] )^2}\_{\text{bias}^2(x)}  + \underbrace{\mathbb{E}\_\mathcal{D}\left[ ( \mathbb{E}\_\mathcal{D}\left[ f^\star\_{\mathcal{D}}(x) \right] - f^\star\_{\mathcal{D}}(x))^2 \right]}\_{\text{var}(x)}
+\end{aligned}$$
+
+This decomposition is known as the **bias-variance** decomposition.
+- The noise term quantity is the irreducible part of the expected risk.
+- The bias term measures the discrepancy between the average model and the Bayes model.
+- The variance term quantities the variability of the predictions.
+
+---
+
+class: middle
+
+## Bias-variance trade-off
+
+- Reducing the capacity makes $f^\star\_{\mathcal{D}}$ fit the data less on average, which increases the bias term.
+- Increasing the capacity makes $f^\star\_{\mathcal{D}}$ vary a lot with the training data, which increases the variance term.
+
+.footnote[Credits: Francois Fleuret, [EE559 Deep Learning](https://fleuret.org/ee559/), EPFL.]
+
+
+---
+
+class: middle, center
+
+## Maximum Likelihood and maximum a posteriori
+
+---
+## Maximum Likelihood
+
+Following the principle of empirical risk minimization, let $\mathcal{L}(\theta)$ 
+denote a loss function defined over the model parameters by:
+
+$$\mathcal{L}(\theta) =  \frac{1}{N} \sum\_{(\mathbf{x}\_i, y\_i) \in \mathcal{D}}  \ell\Big(y\_i, f(\mathbf{x}\_i; \theta)\Big).$$
+
+For both classification and regression, we can interpret $f(\mathbf{x}; \theta)$ 
+as defining a model of the posterior distribution $p(y | \mathbf{x}; \theta)$. 
+
+Therefore, we can define the loss $\ell(\cdot, \cdot)$ as the negative log-likelihood (NLL):
+
+$$\begin{aligned}
+\ell(y, f(\mathbf{x}; \theta)) &= - \ln p(\mathbf{x}, y ; \theta) \\\\
+&= - \ln p(y | \mathbf{x} ; \theta) - \ln p(\mathbf{x}) \\\\
+&= - \ln p(y | \mathbf{x} ; \theta) + cst(\theta)
+\end{aligned}$$
+
+---
+## Maximum a posteriori
+
+We could also treat $\theta$ as a random variable and define the loss $\ell(\cdot, \cdot)$ as the negative log-posterior:
+
+$$\begin{aligned}
+\ell(y, f(\mathbf{x}; \theta)) &= - \ln p(\theta | \mathbf{x}, y) \\\\
+&= - \ln p(\mathbf{x}, y | \theta ) - \ln p(\theta ) + cst(\theta) \\\\
+&= - \ln p(y | \mathbf{x} ; \theta) - \ln p(\theta) + cst(\theta)
+\end{aligned}$$
+
+It results in the negative log-likelihood plus a regularization term over $\theta$ which is the negative prior.
+
+---
+## Binary classification
+
+- **Training data**: $(\mathbf{x}, y) \in \mathcal{X} \times \mathcal{Y}$ with $\mathcal{X} = \mathbb{R}^p$ and $ \mathcal{Y} = \\\{0, 1\\\}$.
+
+- **Model**: $p(y=1|\mathbf{x} ; \theta) = f(\mathbf{x}; \theta)$ and $p(y=0|\mathbf{x} ; \theta) = 1 - f(\mathbf{x}; \theta)$.
+
+  It can be compactly rewritten as follows for all $y \in \mathcal{Y}$:
+
+  $$ p(y|\mathbf{x} ; \theta) = \Big(f(\mathbf{x}; \theta)\Big)^y \Big(1-f(\mathbf{x}; \theta)\Big)^{(1-y)}.  $$
+
+- **Constraint**: $f(\mathbf{x}; \theta) \in [0,1]$.
+
+- The **NLL** gives the **binary cross-entropy** loss:
+
+  $$\begin{aligned}
+  \ell(y, f(\mathbf{x}; \theta)) &= - \ln p(\mathbf{x}, y ; \theta) \\\\
+  &= - \ln p(y | \mathbf{x} ; \theta) - \ln p(\mathbf{x}) \\\\
+  &= - y \ln\Big(f(\mathbf{x}; \theta)\Big) - (1-y) \ln\Big(1-f(\mathbf{x}; \theta)\Big) + cst(\theta)
+  \end{aligned}$$
+
+---
+## $C$-class classification
+
+- **Training data**: $(\mathbf{x}, y) \in \mathcal{X} \times \mathcal{Y}$ with $\mathcal{X} = \mathbb{R}^p$ and $ \mathcal{Y} = \\\{1,...,C\\\}$.
+
+- **Model**: $p(y=c|\mathbf{x} ; \theta) = f\_c(\mathbf{x}; \theta)$ for all $c \in \\\{1,...,C\\\}$.
+
+  It can be compactly rewritten as follows for all $y \in \mathcal{Y}$:
+
+  $$ p(y|\mathbf{x} ; \theta) = \prod\_{c=1}^{C} p(y=c|\mathbf{x} ; \theta)^{\mathbf{1}\_{y = c}} = \prod\_{c=1}^{C} f\_c(\mathbf{x}; \theta)^{\mathbf{1}\_{y = c}} .  $$
+
+- **Constraint**: $f(\mathbf{x}; \theta) \in [0,1]^C$ and $\sum\limits\_{c=1}^C f_c(\mathbf{x}; \theta) = 1$ where $f_c(\mathbf{x}; \theta)$ is the $c$-th entry of $f(\mathbf{x}; \theta)$.
+
+- The **NLL** gives the **cross-entropy** loss:
+
+  $$\ell(y, f(\mathbf{x}; \theta)) = - \sum\_{c=1}^{C} \mathbf{1}\_{y = c} \ln\Big( f\_c(\mathbf{x}; \theta) \Big) + cst(\theta).$$
+
+---
+## Regression
+
+- **Training data**: $(\mathbf{x}, \mathbf{y}) \in \mathcal{X} \times \mathcal{Y}$ with $\mathcal{X} = \mathbb{R}^p$ and $ \mathcal{Y} = \mathbb{R}^q$.
+
+- **Model**: $p(\mathbf{y} | \mathbf{x}; \theta) = \mathcal{N}\Big(\mathbf{y}; f(\mathbf{x}; \theta), \mathbf{I} \Big) = (2 \pi)^{-q/2} \exp\Big( - \frac{1}{2} \parallel \mathbf{y} - f(\mathbf{x}; \theta) \parallel_2^2 \Big)$.
+
+- **Constraint**: $f(\mathbf{x}; \theta) \in \mathbb{R}^q$.
+
+- The **NLL** gives the **squared error** loss:
+
+  $$\ell(y, f(\mathbf{x}; \theta)) = \frac{1}{2} \parallel \mathbf{y} - f(\mathbf{x}; \theta) \parallel_2^2 + \,cst(\theta).$$
+
+---
+class: middle, center
+
+## Lab session on multinomial logistic regression
+
+.center.width-30[![](images/jupyter.png)]
+
+</textarea>
+<script src="../assets/remark-latest.min.js"></script>
+<script src="../assets/auto-render.min.js"></script>
+<script src="../assets/katex.min.js"></script>
+<script type="text/javascript">
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    var options = {sourceUrl: getParameterByName("p"),
+                    highlightLanguage: "python",
+                    // highlightStyle: "tomorrow",
+                    // highlightStyle: "default",
+                    highlightStyle: "github",
+                    // highlightStyle: "googlecode",
+                    // highlightStyle: "zenburn",
+                    highlightSpans: true,
+                    highlightLines: true,
+                    ratio: "16:9"};
+
+    var renderMath = function() {
+        renderMathInElement(document.body, {delimiters: [ // mind the order of delimiters(!?)
+            {left: "$$", right: "$$", display: true},
+            {left: "$", right: "$", display: false},
+            {left: "\\[", right: "\\]", display: true},
+            {left: "\\(", right: "\\)", display: false},
+        ]});
+    }
+  var slideshow = remark.create(options, renderMath);
+</script>
+</body>
+</html>

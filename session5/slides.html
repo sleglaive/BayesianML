@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bayesian Methods for Machine Learning</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <link rel="stylesheet" href="../assets/katex.min.css">
+  <link rel="stylesheet" type="text/css" href="../assets/slides.css">
+  <link rel="stylesheet" type="text/css" href="../assets/grid.css">
+<!-- Change equation font color defined in ../assests/slides.css -->
+<script type="text/javascript">
+  document.documentElement.style
+  .setProperty('--eq_font_color', '#004c86');
+</script>
+</head>
+<body>
+
+<textarea id="source">
+
+class: center, middle
+
+<br/>
+# Bayesian Methods for Machine Learning
+
+.small-vspace[
+
+]
+
+### Lecture 4 - Factor analysis
+
+<br/><br/>
+.bold[Simon Leglaive]
+<br/>
+<br/>
+
+<br/><br/>
+.tiny[CentraleSupélec, 2020-2021]
+
+---
+class: center, middle
+
+## Introduction 
+
+---
+class: middle, center, black-slide
+
+<iframe width="840" height="472" src="https://www.youtube.com/embed/WV_jcaDBZ2I" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+---
+class: middle
+
+.left-column[
+In many problems we have to manipulate high-dimensional data $\mathbf{x} \in \mathbb{R}^D$
+  - Image: $D \sim 10^6$ pixels.
+  - Audio: $D \sim 10^4 $ samples per second.
+  - Text: $D \sim 10^6$ characters in a book.
+  - Social network: $D \sim 10^9$ nodes.
+]
+.right-column.tiny[
+.center.width-90[![](images/data.png)]
+] 
+
+
+
+
+---
+
+class: middle 
+
+.left-column[
+
+- A "natural" signal $\mathbf{x} \in \mathbb{R}^D$ such as an image or a sound exhibits some form of **regularity**, which prevents its $D$ dimensions from varying freely. 
+
+- In other words, the number of degrees of freedom in $\mathbf{x} \in \mathbb{R}^D$ is much lesser than $D$. 
+
+- The data live in a low-dimensional manifold, embedded in the original high-dimensional space.
+
+]
+
+.right-column[
+
+.center.width-70[![](images/manifold.svg)]
+
+]
+
+.reset-column[
+
+There exist **latent factors** from which the **observed data** were **generated**.
+
+]
+
+---
+.center.width-50[![](images/example_2D_manifold.jpg)]
+
+- Consider a dataset that contains images of a letter 'A', which has been scaled and rotated by varying amounts. 
+- Each image has 32x32 pixels, it can be represented as a vector of $D = 1024$ pixel values. 
+- The intrinsic dimensionality is two, because two variables (rotation and scale) were varied in order to produce the data. 
+- With a nonlinear dimensionality reduction technique, we can discard the correlated information (the letter 'A') and recover only the varying information (rotation and scale).
+
+.credit[Credit: https://en.wikipedia.org/wiki/Nonlinear_dimensionality_reduction]
+
+---
+class: center, middle, black-slide
+
+.center[<iframe src="images/TLGANdemo.mp4?autoplay=True" frameborder="0" width="570" height="360" allowfullscreen></iframe>]
+
+---
+### Factor analysis
+
+- The Factor Analysis (FA) model is a simple **latent variable model** where both the observed and latent variables are assumed to be **continuous**. 
+
+- FA is also a **generative model** of the observed variables.
+
+- The observed data are assumed to lie on a **lower-dimensional linear subspace** of the original higher-dimensional space. 
+
+- FA is an **unsupervised** method that can be viewed as a generalized **dimensionality reduction** technique. As we will see, it is somehow related to principal component analysis (PCA).
+
+- FA is commonly used in biology, social and behavioral sciences, marketing, recommendation systems, operational research, and finance.
+
+
+---
+class: center, middle
+
+## Generative model and inference for factor analysis 
+
+
+---
+class: middle
+
+Let $\mathbf{x} = \[x\_1, ..., x\_{D}\]^\top \in \mathbb{R}^D$ denote the observed variables and $\mathbf{z} = \[z\_1, ..., z\_{K}\]^\top \in \mathbb{R}^K$ the latent factors.
+
+FA assumes that each observed variable $x\_i$, $i \in \\{1,...,D\\}$, correspond to: 
+
+  - a linear combination of the $K \ll D$ latent factors $z\_k$, 
+  - with some unknown coefficients $w\_{i,k}$, 
+  - plus an arbitrary offset $\mu\_i$, 
+  - plus a noise term $\epsilon\_i$,
+
+that is:
+$$ 
+\begin{aligned}
+x\_i &= \sum\_{k=1}^K w\_{i,k} z\_k + \mu\_i + \epsilon\_i,
+\end{aligned}
+$$
+
+---
+class: middle
+
+or in vector form:
+$$ 
+\begin{aligned}
+\mathbf{x} &= \sum\_{k=1}^K \mathbf{w}\_k z\_k + \boldsymbol{\mu} + \boldsymbol{\epsilon},
+\end{aligned}
+$$
+where 
+
+- $\mathbf{w}\_k = \[w\_{1,k}, ..., w\_{D,k}\]^\top \in \mathbb{R}^D$
+- $\boldsymbol{\mu} = \[\mu\_{1}, ..., \mu\_{D}\]^\top \in \mathbb{R}^D$
+- $\boldsymbol{\epsilon} = \[\epsilon\_{1}, ..., \epsilon\_{D}\]^\top \in \mathbb{R}^D$
+
+You can also interpret $\mathbf{x}$ as a linear combination of $K$ "basis vectors" $\mathbf{w}\_k$.
+
+---
+class: middle
+
+or in matrix form:
+$$ 
+\begin{aligned}
+\mathbf{x} &= \mathbf{W}\mathbf{z} + \boldsymbol{\mu} + \boldsymbol{\epsilon},
+\end{aligned}
+$$
+where $\mathbf{W} = \[\mathbf{w}\_1, ..., \mathbf{w}\_K\] \in \mathbb{R}^{D \times K}$ is sometimes called the "loading matrix".
+
+
+---
+class: middle
+
+So far, we do note have a **generative model** of the observed variables.
+
+We need to define:
+
+- a prior over the latent variables $p(\mathbf{z})$
+- the likelihood $p(\mathbf{x} | \mathbf{z})$
+
+---
+class: middle
+
+- FA assumes a zero-mean unit-covariance Gaussian prior over the latent variables:
+
+  $$ p(\mathbf{z}) = \mathcal{N}(\mathbf{0}, \mathbf{I}).$$
+
+- The likelihood is implicitely defined by modeling the noise term $ \boldsymbol{\epsilon}$ as a Gaussian random vector with a zero mean and a diagonal covariance matrix:
+
+  $$ p(\boldsymbol{\epsilon}) = \mathcal{N}(\mathbf{0}, \boldsymbol{\Psi}),$$
+
+  where $\boldsymbol{\Psi} = \text{diag}(\Psi\_1, ..., \Psi\_D)$.
+
+.vspace[
+
+]
+
+---
+class: middle, center
+
+How come this noise model implicitely defines the likelihood? 
+
+Well, the Gaussian distribution has nice properties...
+
+---
+class: center, middle
+
+## Multivariate Gaussian distribution
+
+---
+For a $D$-dimensional vector $\mathbf{x}$, the probability density function (pdf) of the multivariate Gaussian distribution is defined by:
+
+$$\mathcal{N}(\mathbf{x}; \boldsymbol{\mu}, \boldsymbol{\Sigma}) = \displaystyle \frac{1}{(2\pi)^{D/2}\sqrt{\det(\boldsymbol\Sigma)}} \exp\left(-\frac 1 2 ({\mathbf x}-{\boldsymbol\mu})^\mathrm{T}{\boldsymbol\Sigma}^{-1}({\mathbf x}-{\boldsymbol\mu})\right),$$
+
+where
+
+- $\boldsymbol{\mu} = \mathbb{E}[ \mathbf{x} ]$ is the mean vector.
+- $\boldsymbol{\Sigma} = \mathbb{E}[ (\mathbf{x} - \boldsymbol{\mu}) (\mathbf{x} - \boldsymbol{\mu})^\top]$ is the covariance matrix.
+
+--
+count: false
+
+Some properties:
+
+- $\mathbb{E}[ \mathbf{x}\mathbf{x}^\top ] = \boldsymbol{\mu} \boldsymbol{\mu}^\top + \boldsymbol{\Sigma}$.
+- $\boldsymbol{\Sigma}$ is symmetric, i.e. $\boldsymbol{\Sigma}^\top = \boldsymbol{\Sigma}$.
+- $\boldsymbol{\Sigma}$ is positive-semidefinite, i.e. $\mathbf{a}^\top \boldsymbol{\Sigma} \mathbf{a} \ge 0$ for all $\mathbf{a} \in \mathbb{R}^D$.
+
+
+---
+### 2D Gaussian distribution
+
+
+.grid[
+
+.kol-1-2[
+
+.width-100[![](images/gaussian.svg)]
+
+]
+.kol-1-2[
+
+Consider a 2D Gaussian distribution with zero mean and covariance: 
+
+$$ \boldsymbol{\Sigma} = \begin{pmatrix} \sigma\_1^2 & \rho \\\\ \rho & \sigma\_2^2 \end{pmatrix}. $$  
+
+We plot the contours of constant probability density.
+
+- **Covariance $\propto$ identity**: contours are concentric circles.
+
+- **Diagonal covariance**: elliptical contours are aligned with the coordinate axes.
+
+]
+]
+
+---
+### Joint Gaussianity
+
+Let $\mathbf{x}\_a \sim \mathcal{N}(\boldsymbol{\mu}\_a, \boldsymbol{\Sigma}\_{aa})$ and $\mathbf{x}\_b \sim \mathcal{N}(\boldsymbol{\mu}\_{b}, \boldsymbol{\Sigma}\_{bb})$ be **two Gaussian random vectors**.
+
+If $\mathbf{x}\_a$ and $\mathbf{x}\_b$ are **independent**, then they are **jointly Gaussian**, i.e. their joint distribution is also Gaussian:
+
+$$\begin{pmatrix} \mathbf{x}\_a \\\\ \mathbf{x}\_b \end{pmatrix}  \sim \mathcal{N}\left( \boldsymbol{\mu}, \boldsymbol{\Sigma} \right), $$
+
+where 
+
+$$\boldsymbol{\mu} = \begin{pmatrix} \boldsymbol{\mu}\_a \\\\ \boldsymbol{\mu}\_b \end{pmatrix}, \qquad\qquad \boldsymbol{\Sigma} = \begin{pmatrix} \boldsymbol{\Sigma}\_{aa} & \boldsymbol{\Sigma}\_{ab} \\\\ \boldsymbol{\Sigma}\_{ba} & \boldsymbol{\Sigma}\_{bb} \end{pmatrix},$$
+
+.small-vspace[
+
+]
+
+and $\boldsymbol{\Sigma}\_{ab} = \mathbb{E}\left[ (\mathbf{x}\_a - \boldsymbol{\mu}\_a) (\mathbf{x}\_b - \boldsymbol{\mu}\_b)^\top\right] = \boldsymbol{\Sigma}\_{ba}^\top = \mathbf{0}$.
+
+.footnote[The opposite is not true: a pair of jointly Gaussian random vectors may not be independent. They are is they are uncorrelated.]
+
+
+---
+### Affine transformation
+
+Let $\mathbf{x}\_a \sim \mathcal{N}(\boldsymbol{\mu}\_a, \boldsymbol{\Sigma}\_{aa})$ and **$ \mathbf{x}\_b $ be an affine transformation of $\mathbf{x}\_a$**:
+
+$$ \mathbf{x}\_b = \mathbf{u} + \mathbf{V} \mathbf{x}\_a. $$
+
+The random vector **$ \mathbf{x}\_b$ is also Gaussian**:
+
+$$ \mathbf{x}\_b \sim \mathcal{N}(\boldsymbol{\mu}\_b, \boldsymbol{\Sigma}\_{bb}), $$
+
+where
+
+$$\boldsymbol{\mu}\_b = \mathbf{u} + \mathbf{V}\boldsymbol{\mu}\_a, \qquad\qquad \boldsymbol{\Sigma}\_{bb} = \mathbf{V}\boldsymbol{\Sigma}\_{aa} \mathbf{V}^\top. $$
+
+
+---
+### Marginalization
+
+**If two random vectors are jointly Gaussian, then the marginal distribution of one vector is also Gaussian.**
+
+Let partition the Gaussian random vector $\mathbf{x}  \sim \mathcal{N}\left( \boldsymbol{\mu}, \boldsymbol{\Sigma} \right)$ according to
+
+$$ \mathbf{x} = \begin{pmatrix} \mathbf{x}\_a \\\\ \mathbf{x}\_b \end{pmatrix} , \qquad\qquad \boldsymbol{\mu} = \begin{pmatrix} \boldsymbol{\mu}\_a \\\\ \boldsymbol{\mu}\_b \end{pmatrix}, \qquad\qquad \boldsymbol{\Sigma} = \begin{pmatrix} \boldsymbol{\Sigma}\_{aa} & \boldsymbol{\Sigma}\_{ab} \\\\ \boldsymbol{\Sigma}\_{ba} & \boldsymbol{\Sigma}\_{bb} \end{pmatrix}.$$
+
+The marginal distribution of $\mathbf{x}\_a$ is given by:
+
+$$ \mathbf{x}\_a \sim \mathcal{N}\left(\boldsymbol{\mu}\_a, \boldsymbol{\Sigma}\_{aa} \right).$$
+
+The marginal distribution of $\mathbf{x}\_b$ is given by:
+
+$$ \mathbf{x}\_b \sim \mathcal{N}\left(\boldsymbol{\mu}\_b, \boldsymbol{\Sigma}\_{bb} \right).$$
+
+---
+### Conditioning
+
+**If two random vectors are jointly Gaussian, then the conditional distribution of one vector conditioned on the other is also Gaussian.**
+
+Let partition the Gaussian random vector $\mathbf{x}  \sim \mathcal{N}\left( \boldsymbol{\mu}, \boldsymbol{\Sigma} \right)$ according to
+
+$$ \mathbf{x} = \begin{pmatrix} \mathbf{x}\_a \\\\ \mathbf{x}\_b \end{pmatrix} , \qquad\qquad \boldsymbol{\mu} = \begin{pmatrix} \boldsymbol{\mu}\_a \\\\ \boldsymbol{\mu}\_b \end{pmatrix}, \qquad\qquad \boldsymbol{\Sigma} = \begin{pmatrix} \boldsymbol{\Sigma}\_{aa} & \boldsymbol{\Sigma}\_{ab} \\\\ \boldsymbol{\Sigma}\_{ba} & \boldsymbol{\Sigma}\_{bb} \end{pmatrix}.$$
+
+The distribution of $\mathbf{x}\_a$ conditioned on $\mathbf{x}\_b$ is given by:
+
+$$ \mathbf{x}\_a | \mathbf{x}\_b \sim \mathcal{N}\left( \boldsymbol{\mu}\_{a|b}, \boldsymbol{\Sigma}\_{a|b} \right), $$
+
+where
+
+$$
+\begin{aligned}
+\boldsymbol{\mu}\_{a|b} &= \boldsymbol{\mu}\_a + \boldsymbol{\Sigma}\_{ab} \boldsymbol{\Sigma}\_{bb}^{-1} (\mathbf{x}\_b - \boldsymbol{\mu}\_b),\\\\
+\boldsymbol{\Sigma}\_{a|b} &= \boldsymbol{\Sigma}\_{aa} - \boldsymbol{\Sigma}\_{ab}\boldsymbol{\Sigma}\_{bb}^{-1}\boldsymbol{\Sigma}\_{ba}.
+\end{aligned}
+$$
+
+---
+
+of course, the distribution of $\mathbf{x}\_b$ conditioned on $\mathbf{x}\_a$ is also given by:
+
+$$ \mathbf{x}\_b | \mathbf{x}\_a \sim \mathcal{N}\left( \boldsymbol{\mu}\_{b|a}, \boldsymbol{\Sigma}\_{b|a} \right), $$
+
+where
+
+$$
+\begin{aligned}
+\boldsymbol{\mu}\_{b|a} &= \boldsymbol{\mu}\_b + \boldsymbol{\Sigma}\_{ba} \boldsymbol{\Sigma}\_{aa}^{-1}  (\mathbf{x}\_a - \boldsymbol{\mu}\_a),\\\\
+\boldsymbol{\Sigma}\_{b|a} &= \boldsymbol{\Sigma}\_{bb} - \boldsymbol{\Sigma}\_{ba}\boldsymbol{\Sigma}\_{aa}^{-1}\boldsymbol{\Sigma}\_{ab}.
+\end{aligned}
+$$
+
+This property is **very useful for computing posteriors** when both observed and latent variables are jointly Gaussian!
+
+---
+### Pause on notations
+
+- $x \sim \mathcal{N}(\mu, \sigma^2)$ denotes that the random variable $x$ follows a Gaussian distribution with mean $\mu$ and variance $\sigma^2$.
+
+- $p(x) = \mathcal{N}(x; \mu, \sigma^2)$ dentotes the probability density function of the Gaussian distribution, i.e. a function of the random variable $x$ parametrized by the mean $\mu$ and the variance $\sigma^2$.
+
+- I abusively use the same symbol $\mathcal{N}$ to denote two different objects. 
+
+- Moreover, when it is not confusing (hopefully), I may simpy write $p(x) = \mathcal{N}(\mu, \sigma^2)$.
+
+
+
+---
+class: center, middle
+
+## (back to) Generative model and inference
+
+---
+
+We recall the model:
+
+$$ 
+\begin{aligned}
+\mathbf{x} &= \mathbf{W}\mathbf{z} + \boldsymbol{\mu} + \boldsymbol{\epsilon}, \\\\
+\mathbf{z} &\sim \mathcal{N}(\mathbf{0}, \mathbf{I}), \\\\
+\boldsymbol{\epsilon} &\sim \mathcal{N}(\mathbf{0}, \boldsymbol{\Psi}), \qquad \qquad \boldsymbol{\Psi} = \text{diag}(\Psi\_1, ..., \Psi\_D). 
+\end{aligned}
+$$
+
+We further assume that the two Gaussian random vectors $\mathbf{z}$ and $\boldsymbol{\epsilon}$ are **independent**. 
+
+It follows that $\mathbf{z}$ and $\boldsymbol{\epsilon}$ are **jointly Gaussian**:
+
+$$\begin{pmatrix} \boldsymbol{\epsilon} \\\\ \mathbf{z} \end{pmatrix}  \sim \mathcal{N}\left( \begin{pmatrix} \mathbf{0} \\\\ \mathbf{0} \end{pmatrix}, \begin{pmatrix} \boldsymbol{\Psi} & \mathbf{0} \\\\ \mathbf{0} & \mathbf{I} \end{pmatrix}\right). $$
+
+---
+
+The random vector $[\mathbf{x}^\top, \mathbf{z}^\top]^\top$, as an affine transformation of the Gaussian vector $[\boldsymbol{\epsilon}^\top, \mathbf{z}^\top]^\top$, **is also a Gaussian random vector**:
+
+$$ \begin{pmatrix} \mathbf{x} \\\\ \mathbf{z} \end{pmatrix} = \begin{pmatrix} \boldsymbol{\mu} \\\\ \mathbf{0} \end{pmatrix} + \begin{pmatrix} \mathbf{I} & \mathbf{W} \\\\ \mathbf{0} & \mathbf{I} \end{pmatrix} \begin{pmatrix} \boldsymbol{\epsilon} \\\\ \mathbf{z} \end{pmatrix}.$$
+
+We have:
+
+$$ \begin{pmatrix} \mathbf{x} \\\\ \mathbf{z} \end{pmatrix} \sim \mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\Sigma}), $$
+
+
+where using the previous formulas
+
+.left-column[
+
+$$\begin{aligned}
+\boldsymbol{\mu} &= \begin{pmatrix}  \boldsymbol{\mu} \\\\ \mathbf{0} \end{pmatrix} + \begin{pmatrix} \mathbf{I} & \mathbf{W} \\\\ \mathbf{0} & \mathbf{I} \end{pmatrix}  \begin{pmatrix} \mathbf{0} \\\\ \mathbf{0} \end{pmatrix} \\\\[.5cm]
+&= \begin{pmatrix}  \boldsymbol{\mu} \\\\ \mathbf{0} \end{pmatrix} 
+\end{aligned}$$
+]
+
+.right-column[
+
+$$\begin{aligned}
+\boldsymbol{\Sigma} &= \begin{pmatrix} \mathbf{I} & \mathbf{W} \\\\ \mathbf{0} & \mathbf{I} \end{pmatrix}  \begin{pmatrix} \boldsymbol{\Psi} & \mathbf{0} \\\\ \mathbf{0} & \mathbf{I} \end{pmatrix} \begin{pmatrix} \mathbf{I} & \mathbf{W} \\\\ \mathbf{0} & \mathbf{I} \end{pmatrix}^\top \\\\[.5cm]
+&= \begin{pmatrix} \mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi} & \mathbf{W} \\\\ \mathbf{W}^\top & \mathbf{I} \end{pmatrix}
+\end{aligned}$$
+
+]
+
+
+---
+
+Once we know that $\begin{pmatrix} \mathbf{x} \\\\ \mathbf{z} \end{pmatrix} \sim \mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\Sigma})$ by linearity of the Gaussian distribution, instead of directly applying the affine transform formulas we could have partitioned the parameters as
+
+$$\boldsymbol{\mu} = \begin{pmatrix} \boldsymbol{\mu}\_x \\\\ \boldsymbol{\mu}\_z \end{pmatrix}, \qquad\qquad \boldsymbol{\Sigma} = \begin{pmatrix} \boldsymbol{\Sigma}\_{xx} & \boldsymbol{\Sigma}\_{xz} \\\\ \boldsymbol{\Sigma}\_{zx} & \boldsymbol{\Sigma}\_{zz} \end{pmatrix},$$
+
+and compute the individual factors as follows:
+
+- $\boldsymbol{\mu}\_z = \mathbb{E}[ \mathbf{z} ] = \mathbf{0} $
+- $\boldsymbol{\mu}\_x = \mathbb{E}[ \mathbf{x} ] = \mathbb{E}[\mathbf{W}\mathbf{z} + \boldsymbol{\mu} + \boldsymbol{\epsilon}] = \boldsymbol{\mu}  $
+- $\boldsymbol{\Sigma}\_{zz} = \mathbb{E}[ (\mathbf{z} - \boldsymbol{\mu}\_z) (\mathbf{z} - \boldsymbol{\mu}\_z)^\top] = \mathbf{I} $
+- $\boldsymbol{\Sigma}\_{xz} = \mathbb{E}[ (\mathbf{x} - \boldsymbol{\mu}\_x) (\mathbf{z} - \boldsymbol{\mu}\_z)^\top] = \mathbb{E}[ (\mathbf{W}\mathbf{z} + \boldsymbol{\epsilon}) \mathbf{z}^\top] = \mathbf{W} $
+- $\boldsymbol{\Sigma}\_{zx} = \boldsymbol{\Sigma}\_{xz}^\top = \mathbf{W}^\top $
+- $\boldsymbol{\Sigma}\_{xx} = \mathbb{E}[ (\mathbf{x} - \boldsymbol{\mu}\_x) (\mathbf{x} - \boldsymbol{\mu}\_x)^\top] = \mathbb{E}[ (\mathbf{W}\mathbf{z} + \boldsymbol{\epsilon}) (\mathbf{W}\mathbf{z} + \boldsymbol{\epsilon})^\top ] = \mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi} $
+
+---
+class: middle
+
+Using the conditioning formulas, we finally obtain the **likelihood**:
+
+ $$\mathbf{x} | \mathbf{z} \sim \mathcal{N}\left( \boldsymbol{\mu}\_{x|z}, \boldsymbol{\Sigma}\_{x|z} \right), $$
+
+- $\boldsymbol{\mu}\_{x|z} = \boldsymbol{\mu}\_x + \boldsymbol{\Sigma}\_{xz} \boldsymbol{\Sigma}\_{zz}^{-1} (\mathbf{z} - \boldsymbol{\mu}\_z) = \boldsymbol{\mu} + \mathbf{W}\mathbf{z}$
+
+- $\boldsymbol{\Sigma}\_{x|z} = \boldsymbol{\Sigma}\_{xx} - \boldsymbol{\Sigma}\_{xz}\boldsymbol{\Sigma}\_{zz}^{-1}\boldsymbol{\Sigma}\_{zx} = \mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi} - \mathbf{W}\mathbf{W}^\top = \boldsymbol{\Psi}$
+
+---
+class: middle
+
+and for free we also have the **posterior** (the Bayesian holy grail):
+
+$$\mathbf{z} | \mathbf{x} \sim \mathcal{N}\left( \boldsymbol{\mu}\_{z|x}, \boldsymbol{\Sigma}\_{z|x} \right), $$
+
+- $\boldsymbol{\mu}\_{z|x} = \boldsymbol{\mu}\_z + \boldsymbol{\Sigma}\_{zx} \boldsymbol{\Sigma}\_{xx}^{-1} (\mathbf{x} - \boldsymbol{\mu}\_x) = \mathbf{W}^\top (\mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi})^{-1}(\mathbf{x} - \boldsymbol{\mu})   $
+
+- $\boldsymbol{\Sigma}\_{z|x} = \boldsymbol{\Sigma}\_{zz} - \boldsymbol{\Sigma}\_{zx}\boldsymbol{\Sigma}\_{xx}^{-1}\boldsymbol{\Sigma}\_{zx} = \mathbf{I} - \mathbf{W}^\top (\mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi})^{-1} \mathbf{W} $
+
+---
+class: middle, center
+
+Let us summarize what we know about FA so far
+
+---
+### FA generative model
+
+.grid[
+
+.kol-2-3[
+
+- **prior** over the latent variables $\mathbf{z} \in \mathbb{R}^K$:
+
+  $$p(\mathbf{z}) = \mathcal{N}(\mathbf{z}; \mathbf{0}, \mathbf{I})$$
+
+- **likelihood** for the observed variables $\mathbf{x} \in \mathbb{R}^D$: 
+
+  $$p(\mathbf{x} | \mathbf{z}; \theta) = \mathcal{N}\left( \mathbf{x}; \boldsymbol{\mu} + \mathbf{W}\mathbf{z}, \boldsymbol{\Psi} \right)$$
+
+- **marginal likelihood**: 
+
+  $$p(\mathbf{x} ; \theta) = \mathcal{N}\left( \mathbf{x}; \boldsymbol{\mu}, \mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi} \right)$$
+
+- **model parameters**:
+
+  $$\theta = \Big\\{\boldsymbol{\mu} \in \mathbb{R}^D, \mathbf{W} \in \mathbb{R}^{D \times K}, \boldsymbol{\Psi} = \text{diag}(\Psi\_1, ..., \Psi\_D) \in \mathbb{R}^{D \times D} \Big\\}$$ 
+
+]
+.kol-1-3[
+
+.vspace[
+
+]
+
+.width-100[![](images/FA.svg)]
+
+]
+
+]
+
+---
+class: middle
+
+The observation model is equivalent to 
+
+$$\mathbf{x} = \mathbf{W}\mathbf{z} + \boldsymbol{\mu} + \boldsymbol{\epsilon}$$ 
+
+where the noise term $\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \boldsymbol{\Psi})$.
+
+
+
+---
+### FA inference
+
+When performing factor analysis, our objective is to infer the latent variables $\mathbf{z}$ given the observations $\mathbf{x}$. 
+
+The **posterior** distribution of the latent variables is given by:
+
+$$ p(\mathbf{z} | \mathbf{x} ; \theta) = \mathcal{N}\left( \mathbf{z}; \boldsymbol{\mu}\_{z|x}, \boldsymbol{\Sigma}\_{z|x} \right)$$
+
+
+- $\boldsymbol{\mu}\_{z|x} = \mathbf{W}^\top (\mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi})^{-1}(\mathbf{x} - \boldsymbol{\mu})   $
+
+- $\boldsymbol{\Sigma}\_{z|x} = \mathbf{I} - \mathbf{W}^\top (\mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi})^{-1} \mathbf{W} $
+
+
+This posterior depends on the **unknown model parameters**.
+
+.footnote[It requires inverting a $D \times D$ matrix, which is computationally demanding in high dimension. 
+
+We can use [Woodbury matrix inversion identity](https://en.wikipedia.org/wiki/Woodbury_matrix_identity) to rewrite the posterior parameters in terms of the inverse of a $K \times K$ matrix.]
+
+---
+class: center, middle
+
+## Parameters estimation
+
+---
+
+For parameters estimation, we usually have access to a dataset $\mathcal{X} = \\{ \mathbf{x}\_n \\}\_{n=1}^N$ of $N$ i.i.d realizations from the previous FA model. 
+
+Similarly, we define the set $\mathcal{Z} = \\{ \mathbf{z}\_n \\}_{n=1}^N$ of latent vectors associated with the observed data $\mathcal{X}$.
+
+The resulting graphical model along with the associated joint distribution are given by:
+
+.grid[
+
+.kol-1-3[.center.width-100[![](images/FA_2.svg)]]
+.kol-2-3[
+
+$$ p(\mathcal{X}, \mathcal{Z}; \theta) = \prod\_{n=1}^N p(\mathbf{x}\_n | \mathbf{z}\_n; \theta) p(\mathbf{z}\_n), $$
+
+where
+
+- $p(\mathbf{z}\_n) = \mathcal{N}(\mathbf{z}\_n; \mathbf{0}, \mathbf{I})$, 
+- $p(\mathbf{x}\_n | \mathbf{z}\_n; \theta) = \mathcal{N}\left(\mathbf{x}\_n; \boldsymbol{\mu} + \mathbf{W}\mathbf{z}\_n, \boldsymbol{\Psi} \right)$.
+
+]
+
+]
+
+---
+
+Ideally, we would like to estimate the parameters $\theta$ by maximizing the log-marginal likelihood for the dataset $\mathcal{X}$:
+
+$$
+\begin{aligned}
+\ln p(\mathcal{X} ; \theta) &= \ln \prod\_{n=1}^N p(\mathbf{x}\_n; \theta) \\\\
+&= \sum\_{n=1}^N \ln \mathcal{N}\left(\mathbf{x}\_n; \boldsymbol{\mu}, \mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi} \right) \\\\
+&= \sum\_{n=1}^N  \ln \frac{1}{(2\pi)^{D/2}\sqrt{\det(\mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi})}} \exp\left(-\frac 1 2 ({\mathbf x\_n}-{\boldsymbol\mu})^\top (\mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi})^{-1} ({\mathbf x\_n}-{\boldsymbol\mu})\right) \\\\
+&= - \frac{N}{2} \ln \det(\mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi}) - \frac{1}{2} \sum\_{n=1}^N   ({\mathbf x\_n}-{\boldsymbol\mu})^\top (\mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi})^{-1} ({\mathbf x\_n}-{\boldsymbol\mu}) + cst(\theta)
+\end{aligned}
+$$
+
+---
+class: middle
+
+The log-marginal likelihood is a quadratic function in $\boldsymbol\mu$. 
+
+Canceling its partial derivative with respect to $\boldsymbol\mu $ gives the **empirical mean** $\boldsymbol\mu = \displaystyle \frac{1}{N} \sum\_{n=1}^N \mathbf x\_n$. 
+
+This solution represents the unique maximum, as could be confirmed by computing second order derivative.
+
+We could have centered the data by substracting this empirical mean, such that the "new" mean of the preprocessed data would be zero. 
+
+In the following, without loss of generality, **we will assume that the data are centered**, i.e. $\boldsymbol\mu = \mathbf 0$.
+
+---
+class: middle
+
+The log-marginal likelihood for centered data is:
+
+$$
+\begin{aligned}
+\ln p(\mathcal{X} ; \theta) &= \ln \prod\_{n=1}^N p(\mathbf{x}\_n; \theta) \\\\
+&= \sum\_{n=1}^N \ln \mathcal{N}\left(\mathbf{x}\_n; \mathbf 0, \mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi} \right) \\\\
+&= \sum\_{n=1}^N  \ln \frac{1}{(2\pi)^{D/2}\sqrt{\det(\mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi})}} \exp\left(-\frac 1 2 {\mathbf x\_n}^\top (\mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi})^{-1} {\mathbf x\_n}\right) \\\\
+&= - \frac{N}{2} \ln \det(\mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi}) - \frac{1}{2} \sum\_{n=1}^N   {\mathbf x\_n}^\top (\mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi})^{-1} {\mathbf x\_n} + cst(\theta) \\\\
+&= - \frac{N}{2} \ln \det(\mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi}) - \frac{N}{2} \text{trace}\Big[(\mathbf{W}\mathbf{W}^\top + \boldsymbol{\Psi})^{-1} \hat{\mathbf{R}}\_{xx}\Big] + cst(\theta),
+\end{aligned}
+$$
+
+where $\displaystyle \hat{\mathbf{R}}\_{xx} = \frac{1}{N} \sum\_{n=1}^N \mathbf x\_n \mathbf x\_n^\top$ is the **empirical covariance matrix**.
+---
+class: middle
+
+If estimating the mean is quite straightforward, estimating the other model parameters 
+
+$$\mathbf{W} \in \mathbb{R}^{D \times K}, \qquad\qquad \boldsymbol{\Psi} = \text{diag}(\Psi\_1, ..., \Psi\_D) \in \mathbb{R}^{D \times D},$$ 
+
+by maximizing the log-marginal likelihood does not have an exact closed-form solution...
+
+--
+count: false
+
+... except with additional assumptions.
+
+---
+exclude: true
+class: center, middle
+
+## Special cases of FA
+
+---
+### Probabilistic PCA (principal component analysis)
+
+Let us assume that $\boldsymbol{\Psi} = \text{diag}(\Psi\_1, ..., \Psi\_D) = \sigma^2 \mathbf I$.
+
+The log-marginal likelihood becomes:
+
+$$ \ln p(\mathcal{X} ; \theta) = - \frac{N}{2} \left( \ln \det(\mathbf{W}\mathbf{W}^\top + \sigma^2 \mathbf I) + \text{trace}\Big[(\mathbf{W}\mathbf{W}^\top + \sigma^2 \mathbf I)^{-1} \hat{\mathbf{R}}\_{xx}\Big] \right) + cst(\theta).$$
+
+Maximization with respect to $\mathbf{W}$ and $\sigma^2$ now has an exact closed-form solution (cf. Bishop, PRML, section 12.2.1, p. 574).
+
+
+.footnote[
+ Christopher M. Bishop, ["Pattern Recognition and Machine Learning"](https://www.microsoft.com/en-us/research/uploads/prod/2006/01/Bishop-Pattern-Recognition-and-Machine-Learning-2006.pdf), Springer, 2006.
+
+]
+
+
+---
+class: middle
+
+Probablistic PCA differs from FA only in the structure of the noise covariance matrix $\boldsymbol{\Psi}$: 
+
+- **FA** assumes a heteroscedastic noise: 
+
+  The **covariance matrix is diagonal**, i.e. the noise variance is different for each dimension.
+
+- **Probabilistic PCA** assumes a homoscedastic noise: 
+
+  The **covariance matrix is proportional to the identity**, i.e. the noise variance is the same for each dimension.
+
+---
+exclude: true
+### "Regular" PCA
+
+- .bold[Assumption #1]
+
+  As before, we suppose that $\boldsymbol{\Psi} = \text{diag}(\Psi\_1, ..., \Psi\_D) = \sigma^2 \mathbf I$. 
+
+  But additionally, we assume that the noise variance $\sigma^2 \rightarrow 0$. 
+
+  Then, the noise term $\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \sigma^2 \mathbf I)$ vanishes, as the Gaussian distribution becomes degenerate, infinitely peaky around the mean $\mathbf{0}$. 
+
+  Our model $\mathbf{x} = \mathbf{W}\mathbf{z} (+ \boldsymbol{\mu})$ thus becomes deterministic, conditionally on $\mathbf{z}$. 
+  
+  **We have removed the uncertainty in the observation model.**
+
+- .bold[Assumption #2]
+
+  The matrix $\mathbf W$ is semi-orthogonal, i.e. $\mathbf W^\top \mathbf W = \mathbf I$.
+
+---
+exclude: true
+class: middle
+
+The resulting log-marginal likelihood is:
+
+$$ 
+\begin{aligned}
+\ln p(\mathcal{X} ; \theta) &= - \frac{N}{2} \text{trace}\Big[(\mathbf{W}\mathbf{W}^\top)^{-1} \hat{\mathbf{R}}\_{xx}\Big] + cst(\theta) \\\\
+&= - \frac{1}{2} \sum\_{n=1}^N \parallel \mathbf{x}\_n - \mathbf{W} \mathbf{W}^\top \mathbf{x}\_n \parallel\_2^2  + cst(\theta) \\\\
+&= - \frac{1}{2} \sum\_{n=1}^N \parallel \mathbf{x}\_n - \hat{\mathbf{x}}\_n \parallel\_2^2  + cst(\theta)
+\end{aligned}
+$$
+with $\hat{\mathbf{x}}\_n = \mathbf{W} \mathbf{z}\_n$ (**decoding**) and $\mathbf{z}\_n = \mathbf{W}^\top \mathbf{x}\_n$ (**encoding**).
+
+
+.footnote[We used $\det(\mathbf{W}\mathbf{W}^\top) = \det(\mathbf{W})\det(\mathbf{W}^\top) = \det(\mathbf{W}^\top)\det(\mathbf{W}) = \det(\mathbf{W}^\top\mathbf{W}) = \det(\mathbf{I}) = 1$]
+
+---
+exclude: true
+class: middle
+
+We can show that the solution which maximizes the log-marginal likelihood is given by computing the eigenvalue decomposition of the empirical covariance matrix $\hat{\mathbf{R}}\_{xx} = \frac{1}{N} \sum\_{n=1}^N \mathbf{x}\_n \mathbf{x}\_n^\top$ and by taking $\mathbf{W} \in \mathbb{R}^{D \times K}$ as the matrix built from the $K$ dominant eigenvectors (i.e. associated with the $K$ largest eigenvalues).
+
+.footnote[Cf. Bishop, PRML, section 12.1.2, p. 563]
+
+---
+exclude: true
+class: center, middle
+
+## (back to) Parameters estimation for FA model
+
+---
+class: middle
+
+So, except is we make additional assumptions, we cannot directly maximize the log-marginal likelihood to estimate the model parameters $\mathbf{W} \in \mathbb{R}^{D \times K}$ and $\boldsymbol{\Psi} = \text{diag}(\Psi\_1, ..., \Psi\_D) \in \mathbb{R}^{D \times D}$.
+
+We have observed variables, we have latent variables, ...
+
+--
+count: false
+
+let's derive an **EM algorithm**!
+
+---
+class: middle
+
+### EM recipe reminder
+
+Given an initialization $\theta\_0$ of the model parameters, iterate for $t=0:T-1$:
+
+- **E-Step**: $Q(\theta, \theta\_t) = \mathbb{E}\_{ p(\mathcal{Z} | \mathcal{X}; \theta\_{t})} [\ln p(\mathcal{X}, \mathcal{Z}; \theta) ]$;
+
+- **M-Step**: $\theta\_{t+1} = \underset{\theta}{\arg\max}\, Q(\theta, \theta\_t) $.
+
+### Exercise
+
+Derive the EM algorithm for the FA model.
+
+---
+class: middle, center
+
+![](images/blackboard.jpg)
+
+</textarea>
+<script src="../assets/remark-latest.min.js"></script>
+<script src="../assets/auto-render.min.js"></script>
+<script src="../assets/katex.min.js"></script>
+<script type="text/javascript">
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    var options = {sourceUrl: getParameterByName("p"),
+                    highlightLanguage: "python",
+                    // highlightStyle: "tomorrow",
+                    // highlightStyle: "default",
+                    highlightStyle: "github",
+                    // highlightStyle: "googlecode",
+                    // highlightStyle: "zenburn",
+                    highlightSpans: true,
+                    highlightLines: true,
+                    ratio: "16:9"};
+
+    var renderMath = function() {
+        renderMathInElement(document.body, {delimiters: [ // mind the order of delimiters(!?)
+            {left: "$$", right: "$$", display: true},
+            {left: "$", right: "$", display: false},
+            {left: "\\[", right: "\\]", display: true},
+            {left: "\\(", right: "\\)", display: false},
+        ]});
+    }
+  var slideshow = remark.create(options, renderMath);
+</script>
+</body>
+</html>
