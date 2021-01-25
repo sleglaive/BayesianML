@@ -217,7 +217,7 @@ Key concepts you should be familiar with at the end of this lecture:
 Material:
 
 - [Slides](https://sleglaive.pages.centralesupelec.fr/page/bayesian-ML/session6/slides.html)
-- [Demo mean field variational inference](demo-MF-VI.pdf)
+- [Demo mean field variational inference](session6/demo-MF-VI.pdf)
 - [Solution to exercices](session6/solution_exercises.pdf)
 
 ## Bayesian linear regression
