@@ -621,11 +621,15 @@ where
 ]
 .tiny[Note that:] $\scriptsize R(f) = \mathbb{E}\_{p^\star(\mathbf{x},y)}\left[ \ell(y, f(\mathbf{x})) \right] = \mathbb{E}\_{p^\star(\mathbf{x})}\left[ \mathbb{E}\_{p^\star(y| \mathbf{x})}\left[ \ell(y, f(\mathbf{x})) \right] \right] = \mathbb{E}\_{p^\star(\mathbf{x})}\left[ R(f | x) \right]$
 
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
 ---
 
 class: middle
 
 If $\mathcal{D}$ is itself considered as a random variable, then $f^\star\_{\mathcal{D}}$ is also a random variable, along with its predictions $\hat{y}$.
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
 
 ---
 
@@ -633,9 +637,12 @@ class: middle
 
 .center[![](images/poly-avg-degree-1.png)]
 
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
 ???
 
 What do you observe?
+
 
 ---
 
@@ -644,12 +651,16 @@ count: false
 
 .center[![](images/poly-avg-degree-2.png)]
 
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
 ---
 
 class: middle
 count: false
 
 .center[![](images/poly-avg-degree-3.png)]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
 
 ---
 
@@ -658,12 +669,16 @@ count: false
 
 .center[![](images/poly-avg-degree-4.png)]
 
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
 ---
 
 class: middle
 count: false
 
 .center[![](images/poly-avg-degree-5.png)]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
 
 ---
 
@@ -682,6 +697,8 @@ This decomposition is known as the **bias-variance** decomposition.
 - The bias term measures the discrepancy between the average model and the Bayes model.
 - The variance term quantities the variability of the predictions.
 
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
 ---
 
 class: middle
@@ -691,7 +708,7 @@ class: middle
 - Reducing the capacity makes $f^\star\_{\mathcal{D}}$ fit the data less on average, which increases the bias term.
 - Increasing the capacity makes $f^\star\_{\mathcal{D}}$ vary a lot with the training data, which increases the variance term.
 
-.footnote[Credits: Francois Fleuret, [EE559 Deep Learning](https://fleuret.org/ee559/), EPFL.]
+.credit[Credits: Francois Fleuret, [EE559 Deep Learning](https://fleuret.org/ee559/), EPFL.]
 
 
 ---
