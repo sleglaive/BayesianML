@@ -17,7 +17,7 @@ At the end of the course, you are expected to:
 
 ### Prerequisites
 
-You are expected to be familiar with basic concepts of probabilities, statistics and machine learning. The 1st-year course "statistics and learning" provides all these requirements. 
+You are expected to be familiar with basic concepts of probabilities, statistics and machine learning. The 1st-year course "statistics and learning" at CentraleSupélec provides all these requirements. 
 
 We will have a session dedicated to the basics of statistical learning, so the most important is that you revise probabilities if you feel like you need to. To do so, you can read Chapter 6 "Probability and distribution" of [Mathematics for Machine Learning](https://mml-book.github.io/book/mml-book.pdf), by Marc Peter Deisenroth, A. Aldo Faisal, and Cheng Soon Ong, published by Cambridge University Press. 
 
@@ -29,20 +29,6 @@ Other useful references are:
 
 - [Mathematics for Machine Learning](https://mml-book.github.io/book/mml-book.pdf), by Marc Peter Deisenroth, A. Aldo Faisal, and Cheng Soon Ong, Cambridge University Press, 2020. (freely available online)
 - Machine Learning: A Probabilistic Perspective, by Kevin P. Murphy, MIT Press, 2012. (available at the library).
-
-### Evaluation
-
-After each practical session, you should submit a report (in the form of a Jupyter notebook) with both theoretical and practical outcomes. The evaluation of these reports represents 30% of the final grade. The remaining 70% correspond to a final exam.
-
-The exam is scheduled on Thursday, January 28, 9:30-11:30. All documents will be forbidden, but don't worry, if you need formulas such as the probability density functions of common distributions, it will be provided in an appendix.
-
-### Anaconda install instructions
-
-Not only for practicals but also during lectures, we will have to write/run Python scripts and more precisely Jupyter Notebooks. Before the first lecture, you have to install Anaconda (the individual edition) which is the easiest tool to manage Python packages. You can refer to Anaconda's documentation or follow a tutorial video (for instance, [this one in English](https://www.youtube.com/watch?v=5mDYijMfSzs&ab_channel=ProgrammingKnowledge) or [this one in French](https://www.youtube.com/watch?v=jaw5FhWx2Bk&ab_channel=MachineLearnia).).
-
-With Anaconda, you can easily manage your Python packages. See for instance in the documentation how to install a new package, using Anaconda prompt (which is simply the terminal in Ubuntu or Mac OS).
-
-If you have troubles installing Anaconda, which is very unlikely as it is super simple, you can run Jupyter Notebooks in Google Colab, which is a free online computing environment where you can run code on CPU but also GPU. Keep in mind however that working locally on your computer may be more ecological than using Google servers.
 
 ### Agenda
 
