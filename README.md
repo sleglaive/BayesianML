@@ -195,7 +195,7 @@ We already discussed about linear regression (polynomial regression) in the seco
 
 Material:
 
-- [Notebook - Bayesian linear regression](session7/bayesian_LR.ipynb)
+- [Notebook - Bayesian linear regression](session7/Bayesian%20LR.ipynb)
 - [utils.py](session7/utils.py)
 
 <a id='session8'></a>
