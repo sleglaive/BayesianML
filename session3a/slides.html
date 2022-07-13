@@ -33,7 +33,7 @@ class: center, middle
 <br/>
 
 <br/><br/>
-.tiny[CentraleSupélec, 2020-2021]
+.tiny[CentraleSupélec]
   
 
 ---
@@ -42,6 +42,7 @@ class: center, middle
 ## Bayesian networks
 
 ---
+class: middle
 
 A Probabilistic graphical model (PGM) comprises **nodes** (also called vertices) connected by **links** (also known as edges or arcs). 
 
@@ -63,6 +64,7 @@ In 1998 the LDS Hospital in Salt Lake City, Utah developed a Bayesian network to
 .footnote[sensitivity: proportion of positives that are correctly identified; specificity: proportion of negatives that are correctly identified.]
 
 ---
+class: middle
 ### From the joint distribution to the graph
 
 The graph captures the way in which **the joint distribution over all the random variables can be decomposed into a product of factors, each depending only on a subset of the variables**. 
@@ -236,11 +238,12 @@ This is valid as long as there are no **directed cycles**, i.e. there are no clo
 Bayesian networks are also called **directed acyclic graphs**, or DAGs.
 
 ---
+class: middle
 ### Formal definition of a Bayesian network
 
 A Bayesian network is a directed graph $G = (V, E)$ together with:
 
-- A random variable $x\_k$ for each note $k \in V$
+- A random variable $x\_k$ for each node $k \in V$
 - A conditional probability distribution $p(x\_k | \text{pa}\_k )$ for each node, defining the probability distribution of $x\_k$ conditioned on its parents.
 
 
@@ -281,6 +284,7 @@ A Bayesian network is a directed graph $G = (V, E)$ together with:
 ]
 
 ---
+
 ### Generative model and ancestral sampling
 
 A Bayesian network captures the causal process by which the data were generated. For this reason, such models are often called **generative models**.
@@ -293,6 +297,7 @@ We can generate data from the definition of the Bayesian network, by sampling su
 This method is called **ancestral sampling**, each variable being sampled given its parents (ancestors). 
 
 ---
+class: middle
 
 For example, assume we want to sample from $p(x\_1, x\_2, x\_3) = p(x\_1)p(x\_2 | x\_1) p(x\_3 | x\_1, x\_2)$ where we know each one of the conditional distributions.
 
@@ -361,6 +366,7 @@ count: false
 - This says that the variables $a$ and $b$ are statistically independent, given $c$.
 
 ---
+class: middle
 
 - Conditional independence properties simplify both the structure of a model and the computations needed to perform inference and learning in Bayesian networks.
 
@@ -644,6 +650,8 @@ Are $a$ and $e$ D-separated given $b$ and $c$?
 - You may find all this pretty abstract, but it is actually essential when you perform inference in Bayesian networks.
 
 ---
+class: middle
+
 ### Markov blanket
 
 Consider a joint distribution of an arbitrary number $K$ of variables $p(x\_1, x\_2, ..., x\_K)$ represented by a Bayesian network with $K$ nodes. Consider the conditional distribution of a particular variable $x\_k$ given all the remaining ones $\\{x\_{i}\\}\_{i =\not\ k }$:

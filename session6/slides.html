@@ -33,7 +33,7 @@ class: center, middle
 <br/>
 
 <br/><br/>
-.tiny[CentraleSupélec, 2020-2021]
+.tiny[CentraleSupélec]
   
 ---
 class: middle, center
@@ -411,38 +411,20 @@ $$\gamma\_2 = \Lambda\_{22}, \qquad\qquad  m\_2 = \mu\_2 - \Lambda\_{22}^{-1}\La
 ---
 class: middle
 
-To sum up,
+To sum up, from an **initialization** of $q\_1^\star(z\_1)$ and $q\_2^\star(z\_2)$ we **iterate**:
 
 $$ 
 \begin{aligned}
-q\_1^\star(z\_1) &= \mathcal{N}\Big( \underbrace{\mu\_1 - \Lambda\_{11}^{-1}\Lambda\_{12}\big( {\color{brown}\mathbb{E}\_{q\_2(z\_2)}\left[z\_2 \right]} - \mu\_2\big)}\_{m\_1},\, \Lambda\_{11}^{-1}\Big), \\\\[.3cm]
-q\_2^\star(z\_2) &= \mathcal{N}\Big(\underbrace{\mu\_2 - \Lambda\_{22}^{-1}\Lambda\_{21}\big( {\color{brown}\mathbb{E}\_{q\_1(z\_1)}\left[z\_1 \right]} - \mu\_1\big)}\_{m\_2},\, \Lambda\_{22}^{-1}\Big),
+q\_1^\star(z\_1) &= \mathcal{N}\Big( \underbrace{\mu\_1 - \Lambda\_{11}^{-1}\Lambda\_{12}\big( {\color{brown}\mathbb{E}\_{q\_2^\star(z\_2)}\left[z\_2 \right]} - \mu\_2\big)}\_{m\_1},\, \Lambda\_{11}^{-1}\Big), \\\\[.3cm]
+q\_2^\star(z\_2) &= \mathcal{N}\Big(\underbrace{\mu\_2 - \Lambda\_{22}^{-1}\Lambda\_{21}\big( {\color{brown}\mathbb{E}\_{q\_1^\star(z\_1)}\left[z\_1 \right]} - \mu\_1\big)}\_{m\_2},\, \Lambda\_{22}^{-1}\Big),
 \end{aligned}
 $$
-and
-$${\color{brown}\mathbb{E}\_{q\_2(z\_2)}\left[z\_2 \right]} = ... \qquad\qquad {\color{brown}\mathbb{E}\_{q\_1(z\_1)}\left[z\_1 \right]} = ... $$
-
----
-class: middle
-count: false
-
-To sum-up,
-
-$$ 
-\begin{aligned}
-q\_1^\star(z\_1) &= \mathcal{N}\Big( \underbrace{\mu\_1 - \Lambda\_{11}^{-1}\Lambda\_{12}\big( {\color{brown}\mathbb{E}\_{q\_2(z\_2)}\left[z\_2 \right]} - \mu\_2\big)}\_{m\_1},\, \Lambda\_{11}^{-1}\Big), \\\\[.3cm]
-q\_2^\star(z\_2) &= \mathcal{N}\Big(\underbrace{\mu\_2 - \Lambda\_{22}^{-1}\Lambda\_{21}\big( {\color{brown}\mathbb{E}\_{q\_1(z\_1)}\left[z\_1 \right]} - \mu\_1\big)}\_{m\_2},\, \Lambda\_{22}^{-1}\Big),
-\end{aligned}
-$$
-and
-$${\color{brown}\mathbb{E}\_{q\_2(z\_2)}\left[z\_2 \right]} = m\_2, \qquad\qquad {\color{brown}\mathbb{E}\_{q\_1(z\_1)}\left[z\_1 \right]} = m\_1. $$
-
---
-count: false
+with
+$${\color{brown}\mathbb{E}\_{q\_2^\star(z\_2)}\left[z\_2 \right]} = m\_2, \qquad\qquad {\color{brown}\mathbb{E}\_{q\_1^\star(z\_1)}\left[z\_1 \right]} = m\_1. $$
 
 It is clear that these solutions are coupled, as $q\_1^\star(z\_1)$ depends on an expectation computed with respect to $q\_2^\star(z\_2)$ and vice versa. 
 
-After initialization (e.g. random), we need to **iterate the updates** of the variational parameters.
+.footnote[More precisely, we iterate the updates of the variational parameters, i.e., the parameters of the variational distributions.]
 
 ---
 
@@ -570,7 +552,7 @@ $$ \mathbb{E}\_{q\_\tau(\tau)}[\tau] = a\_N / b\_N, $$
 
 $$ \mathbb{E}\_{q\_\mu(\mu)}[\mu] = \mu\_N, $$
 
-$$ \mathbb{E}\_{q\_\mu(\mu)}[\mu^2] = \mu\_N + \lambda\_N^{-1}. $$
+$$ \mathbb{E}\_{q\_\mu(\mu)}[\mu^2] = \mu\_N^2 + \lambda\_N^{-1}. $$
 
 
 ---

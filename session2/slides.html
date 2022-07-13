@@ -36,7 +36,7 @@ class: middle
 <br/>
 
 <br/><br/>
-.tiny[CentraleSupélec, 2020-2021]
+.tiny[CentraleSupélec]
 
 ]
 
@@ -94,6 +94,11 @@ $$p(y|\mathbf{x})$$
 
 for any new $\mathbf{x}$ (i.e. that was not part of the training dataset).
 
+- In **generative models**, we are interested in modeling how the observation $\mathbf{x}$ is generated from the latent variable $y$. This is done by defining the joint distrubtion $p(\mathbf{x} , y) = p(\mathbf{x} | y) p(y)$. $p(y|\mathbf{x})$ is then computed using Bayes theorem.
+
+- In **discriminative models**, we are only interested in modeling how the latent variable $y$ is generated from the observation $\mathbf{x}$, i.e. we only care about modeling $p(y|\mathbf{x})$.
+
+Today we will focus on discriminative models.
 
 
 .credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
@@ -475,13 +480,13 @@ Why shouldn't we pick the largest $d$?
 
 class: middle
 
-## Bayes risk and model
+## Bayes risk and estimator
 
 Let $\mathcal{Y}^{\mathcal X}$ be the set of all functions $f : \mathcal{X} \to \mathcal{Y}$.
 
 We define the **Bayes risk** as the minimal expected risk over all possible functions,
 $$R\_B = \min\_{f \in \mathcal{Y}^{\mathcal X}} R(f),$$
-and call **Bayes model** the model $f_B$ that achieves this minimum.
+and call **Bayes estimator** the model $f_B$ that achieves this minimum.
 
 .bold[No model $f$ can perform better than $f\_B$.]
 
@@ -603,23 +608,23 @@ Comment on the comparison of algorithms from one paper to the other.
 
 ## Bias-variance decomposition
 
-Consider a **fixed point** $x$ and the prediction $\hat{y}=f^\star\_{\mathcal{D}}(x)$ of the empirical risk minimizer at $x$.
+Consider a **fixed point** $\mathbf{x}$ and the prediction $\hat{y}=f^\star\_{\mathcal{D}}(\mathbf{x})$ of the empirical risk minimizer at $\mathbf{x}$.
 
 Then the local expected risk of $f^\star\_{\mathcal{D}}$ is
 $$\begin{aligned}
-R(f^\star\_{\mathcal{D}}|x) &= \mathbb{E}\_{p^\star(y|x)} \left[ (y - f^\star\_{\mathcal{D}}(x))^2 \right] \\\\
-&= \mathbb{E}\_{p^\star(y|x)} \left[ (y - f\_B(x) + f\_B(x) - f^\star\_{\mathcal{D}}(x))^2 \right]  \\\\
-&= \mathbb{E}\_{p^\star(y|x)} \left[ (y - f\_B(x))^2 \right] + \mathbb{E}\_{ p^\star(y|x)} \left[ (f\_B(x) - f^\star\_{\mathcal{D}}(x))^2 \right] \\\\
-&= R(f\_B|x) + (f\_B(x) - f^\star\_{\mathcal{D}}(x))^2
+R(f^\star\_{\mathcal{D}}|\mathbf{x}) &= \mathbb{E}\_{p^\star(y|\mathbf{x})} \left[ (y - f^\star\_{\mathcal{D}}(\mathbf{x}))^2 \right] \\\\
+&= \mathbb{E}\_{p^\star(y|\mathbf{x})} \left[ (y - f\_B(\mathbf{x}) + f\_B(\mathbf{x}) - f^\star\_{\mathcal{D}}(\mathbf{x}))^2 \right]  \\\\
+&= \mathbb{E}\_{p^\star(y|\mathbf{x})} \left[ (y - f\_B(\mathbf{x}))^2 \right] + \mathbb{E}\_{ p^\star(y|\mathbf{x})} \left[ (f\_B(\mathbf{x}) - f^\star\_{\mathcal{D}}(\mathbf{x}))^2 \right] \\\\
+&= R(f\_B|\mathbf{x}) + (f\_B(\mathbf{x}) - f^\star\_{\mathcal{D}}(\mathbf{x}))^2
 \end{aligned}$$
-where
-- $R(f\_B|x)$ is the local expected risk of the Bayes model. This term cannot be reduced.
-- $(f\_B(x) - f^\star\_{\mathcal{D}}(x))^2$ represents the discrepancy between $f\_B$ and $f^\star\_{\mathcal{D}}$.
+- $R(f\_B|\mathbf{x})$ is the local expected risk of the Bayes estimator. This term cannot be reduced.
+- $(f\_B(\mathbf{x}) - f^\star\_{\mathcal{D}}(\mathbf{x}))^2$ represents the discrepancy between $f\_B$ and $f^\star\_{\mathcal{D}}$.
 
-.vspace[
-
+.footnote[
+Remarks:
+- $\scriptsize R(f) = \mathbb{E}\_{p^\star(\mathbf{\mathbf{x}},y)}\left[ \ell(y, f(\mathbf{\mathbf{x}})) \right] = \mathbb{E}\_{p^\star(\mathbf{\mathbf{x}})}\left[ \mathbb{E}\_{p^\star(y| \mathbf{\mathbf{x}})}\left[ \ell(y, f(\mathbf{\mathbf{x}})) \right] \right] = \mathbb{E}\_{p^\star(\mathbf{\mathbf{x}})}\left[ R(f | \mathbf{x}) \right]$
+- To go from the second to third line we used the fact that $f\_B(\mathbf{x}) = \arg\min\_{f \in \mathcal{Y}^{\mathcal X}} R(f) = \mathbb{E}\_{p^\star(y|\mathbf{x})}[y]$.
 ]
-.tiny[Note that:] $\scriptsize R(f) = \mathbb{E}\_{p^\star(\mathbf{x},y)}\left[ \ell(y, f(\mathbf{x})) \right] = \mathbb{E}\_{p^\star(\mathbf{x})}\left[ \mathbb{E}\_{p^\star(y| \mathbf{x})}\left[ \ell(y, f(\mathbf{x})) \right] \right] = \mathbb{E}\_{p^\star(\mathbf{x})}\left[ R(f | x) \right]$
 
 .credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
 
@@ -627,9 +632,50 @@ where
 
 class: middle
 
-If $\mathcal{D}$ is itself considered as a random variable, then $f^\star\_{\mathcal{D}}$ is also a random variable, along with its predictions $\hat{y}$.
+If $\mathcal{D}$ is itself considered as a random variable, then $f^\star\_{\mathcal{D}}$ is also a random variable, along with its predictions $\hat{y} = f^\star\_{\mathcal{D}}(\mathbf{x})$.
 
 .credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+count: false
+
+.center[![](images/poly-avg-degree-3.png)]
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+
+---
+
+class: middle
+
+Formally, the expected local expected risk yields to:
+$$\begin{aligned}
+&\mathbb{E}\_\mathcal{D} \left[ R(f^\star\_{\mathcal{D}}|\mathbf{x}) \right] \\\\
+&= \mathbb{E}\_\mathcal{D} \left[ R(f\_B|\mathbf{x}) + (f\_B(\mathbf{x}) - f^\star\_{\mathcal{D}}(\mathbf{x}))^2 \right]  \\\\
+&=  R(f\_B|\mathbf{x}) + \mathbb{E}\_\mathcal{D} \left[ (f\_B(\mathbf{x}) - f^\star\_{\mathcal{D}}(\mathbf{x}))^2 \right] \\\\
+&= \underbrace{R(f\_B|\mathbf{x})}\_{\text{noise}} + \underbrace{(f\_B(\mathbf{x}) - \mathbb{E}\_\mathcal{D}\left[ f^\star\_{\mathcal{D}}(\mathbf{x}) \right] )^2}\_{\text{bias}^2}  + \underbrace{\mathbb{E}\_\mathcal{D}\left[ ( f^\star\_{\mathcal{D}}(\mathbf{x}) - \mathbb{E}\_\mathcal{D}\left[ f^\star\_{\mathcal{D}}(\mathbf{x}) \right])^2 \right]}\_{\text{var}}
+\end{aligned}$$
+
+This decomposition is known as the **bias-variance** decomposition.
+- The noise term quantity is the irreducible part of the expected risk.
+- The bias term measures the discrepancy between the average model and the Bayes estimator.
+- The variance term quantities the variability of the predictions.
+
+.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
+
+---
+
+class: middle
+
+## Bias-variance trade-off
+
+- Reducing the capacity makes $f^\star\_{\mathcal{D}}$ fit the data less on average, which increases the bias term.
+- Increasing the capacity makes $f^\star\_{\mathcal{D}}$ vary a lot with the training data, which increases the variance term.
+
+.credit[Credits: Francois Fleuret, [EE559 Deep Learning](https://fleuret.org/ee559/), EPFL.]
+
 
 ---
 
@@ -679,37 +725,6 @@ count: false
 .center[![](images/poly-avg-degree-5.png)]
 
 .credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
-
----
-
-class: middle
-
-Formally, the expected local expected risk yields to:
-$$\begin{aligned}
-&\mathbb{E}\_\mathcal{D} \left[ R(f^\star\_{\mathcal{D}}|x) \right] \\\\
-&= \mathbb{E}\_\mathcal{D} \left[ R(f\_B|x) + (f\_B(x) - f^\star\_{\mathcal{D}}(x))^2 \right]  \\\\
-&=  R(f\_B|x) + \mathbb{E}\_\mathcal{D} \left[ (f\_B(x) - f^\star\_{\mathcal{D}}(x))^2 \right] \\\\
-&= \underbrace{R(f\_B|x)}\_{\text{noise}(x)} + \underbrace{(f\_B(x) - \mathbb{E}\_\mathcal{D}\left[ f^\star\_{\mathcal{D}}(x) \right] )^2}\_{\text{bias}^2(x)}  + \underbrace{\mathbb{E}\_\mathcal{D}\left[ ( \mathbb{E}\_\mathcal{D}\left[ f^\star\_{\mathcal{D}}(x) \right] - f^\star\_{\mathcal{D}}(x))^2 \right]}\_{\text{var}(x)}
-\end{aligned}$$
-
-This decomposition is known as the **bias-variance** decomposition.
-- The noise term quantity is the irreducible part of the expected risk.
-- The bias term measures the discrepancy between the average model and the Bayes model.
-- The variance term quantities the variability of the predictions.
-
-.credit[Credits: Gilles Louppe, [INFO8010 - Deep Learning](https://github.com/glouppe/info8010-deep-learning), ULiège.]
-
----
-
-class: middle
-
-## Bias-variance trade-off
-
-- Reducing the capacity makes $f^\star\_{\mathcal{D}}$ fit the data less on average, which increases the bias term.
-- Increasing the capacity makes $f^\star\_{\mathcal{D}}$ vary a lot with the training data, which increases the variance term.
-
-.credit[Credits: Francois Fleuret, [EE559 Deep Learning](https://fleuret.org/ee559/), EPFL.]
-
 
 ---
 

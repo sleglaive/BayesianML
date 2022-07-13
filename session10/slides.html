@@ -33,7 +33,7 @@ class: center, middle
 <br/>
 
 <br/><br/>
-.tiny[CentraleSupélec, 2020-2021]
+.tiny[CentraleSupélec]
   
 
 ---
@@ -186,13 +186,13 @@ as close as possible to the true data distribution $p^\star(\mathbf{x})$, accord
 For instance, minimizing the Kullback-Leibler (KL) divergence $D\_{\text{KL}} (p^\star(\mathbf{x}) \parallel p(\mathbf{x}; \theta))$ is equivalent to maximum likelihood estimation.
 
 ---
-## 1-dimensional example
+## 1-dimensional toy example
 
-We assume a simple Gaussian generative model of data $x \in \mathbb{R}$:
+- We define the true data distribution $p^\star(x)$ as a Gaussian distribution with known mean and variance, but of course usually we do not know this distribution.
 
-$$ p(x ; \theta) = \frac{1}{\sqrt{2 \pi \sigma^2}} \exp\left( \frac{(x - \mu)^2 }{ 2 \sigma^2} \right), $$
+- We assume a Gaussian model distribution $p(x ; \theta) = \mathcal{N}(x; \mu, \sigma^2) $ where $\theta = \\{ \mu, \sigma^2 \\}$.
 
-where the parameters $\theta = \\{ \mu, \sigma^2 \\}$ are estimated in the maximum likelihood sense.
+- The parameters $\theta$ are estimated by minimizing .small[(a Monte Carlo estimate of)] $D\_{\text{KL}}\left( p^\star(x) \parallel p(x; \theta) \right)$, i.e. by maximum likelihood.
 
 .center.width-50[![](images/illust_Gaussian.svg)]
 
@@ -258,9 +258,7 @@ $$ \mathbf{x} = f\_K \circ ... \circ f\_1(\mathbf{z}\_0), \qquad \mathbf{z}\_0 \
 
 .center.width-70[![](images/normalizing-flow-Rezende.png)]
 
-As mappings are invertible, we can express $ p(\mathbf{x} ; \theta)$ analytically from the Jacobian of the inverse transforms:
-
-$$ p\_k(\mathbf{z}\_k) = p\_{k-1}(f\_{k}^{-1}(\mathbf{z}\_{k})) \left| \det \frac{d f\_k^{-1}}{d\mathbf{z}\_k} \right|. $$
+As mappings are invertible, we can express $ p(\mathbf{x} ; \theta)$ analytically from the initial density $p_0(\mathbf{z}\_0)$ and the Jacobian of the inverse transforms.
 
 .credit[Image credits: D. Rezende et al., [Variational Inference with Normalizing Flows](https://arxiv.org/pdf/1505.05770.pdf), ICML 2015.]
 
@@ -354,7 +352,78 @@ class: middle
 
 ]
 
-.credit[S. L., X. Alameda-Pineda, L. Girin, R. Horaud, ["A Recurrent Variational Autoencoder for Speech Enhancement"](https://arxiv.org/pdf/1910.10942.pdf), IEEE ICASSP, 2020.]
+.credit[S. L., X. Alameda-Pineda, L. Girin, R. Horaud, [A Recurrent Variational Autoencoder for Speech Enhancement](https://arxiv.org/pdf/1910.10942.pdf), IEEE ICASSP, 2020.]
+
+---
+## VAE for audio synthesis
+
+- Unconditional generation
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Dataset</th>
+      <th>Generation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">Darbouka (stereo)</td>
+      <td><audio src="https://anonymous84654.github.io/ICLR_anonymous/audio/docs_darbouka_prior.mp3" controls=""></audio></td>
+    </tr>
+    <tr>
+      <td style="text-align: center">VCTK (mono)</td>
+      <td><audio src="https://anonymous84654.github.io/ICLR_anonymous/audio/hierarchical.mp3" controls=""></audio></td>
+    </tr>
+  </tbody>
+</table>
+
+.grid[
+
+.kol-1-2[
+
+- Strings to speech transfer
+
+<table>
+  <thead>
+    <tr>
+      <th>original</th>
+      <th>reconstructed</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><audio src="https://anonymous84654.github.io/ICLR_anonymous/eval_timbre_2/x.mp3" controls="" style="width: 200px"></audio></td>
+      <td><audio src="https://anonymous84654.github.io/ICLR_anonymous/eval_timbre_2/y.mp3" controls="" style="width: 200px"></audio></td>
+    </tr>
+  </tbody>
+</table>
+
+]
+.kol-1-2[
+
+- Speech to strings transfer
+
+<table>
+  <thead>
+    <tr>
+      <th>original</th>
+      <th>reconstructed</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><audio src="https://anonymous84654.github.io/ICLR_anonymous/eval_timbre_1/x.mp3" controls="" style="width: 200px"></audio></td>
+      <td><audio src="https://anonymous84654.github.io/ICLR_anonymous/eval_timbre_1/y.mp3" controls="" style="width: 200px"></audio></td>
+    </tr>
+  </tbody>
+</table>
+
+]
+
+]
+
+.credit[A. Caillon, P. Esling, [RAVE: A variational autoencoder for fast and high-quality neural audio synthesis](https://arxiv.org/abs/2111.05011), arXiv, 2021.]
 
 ---
 class: middle

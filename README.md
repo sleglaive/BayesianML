@@ -35,84 +35,62 @@ Other useful references are:
 <table>
 <tbody>
 <tr>
-<td>November 30</td>
-<td>PM</td>
+<td>Session 1</td>
 <td>Lecture</td>
 <td><a href='#session1'>Fundamentals of Bayesian modeling and inference</a></td>
 </tr>
 <tr>
-<td>December 4</td>
-<td>AM</td>
+<td>Session 2</td>
 <td>Lecture</td>
 <td><a href='#session2'>Fundamentals of machine learning</a></td>
 </tr>
 <tr>
-<td>December 9</td>
-<td>AM</td>
+<td>Session 3</td>
 <td>Lecture</td>
 <td><a href='#session3'>Bayesian networks and inference in latent variable models</a></td>
 </tr>
 <tr>
-<td>December 11</td>
-<td>AM</td>
+<td>Session 4</td>
 <td>Practical</td>
 <td><a href='#session4'>Gaussian mixture model</a></td>
 </tr>
 <tr>
-<td>December 18</td>
-<td>AM</td>
+<td>Session 5</td>
 <td>Lecture</td>
 <td><a href='#session5'>Factor Analysis</a></td>
 </tr>
 <tr>
-<td>January 6</td>
-<td>AM</td>
+<td>Session 6</td>
 <td>Lecture</td>
 <td><a href='#session6'>Variational inference</a></td>
 </tr>
 <tr>
-<td>January 8</td>
-<td>AM</td>
+<td>Session 7</td>
 <td>Practical</td>
 <td><a href='#session7'>Bayesian linear regression</a></td>
 </tr>
 <tr>
-<td>January 13</td>
-<td>AM</td>
+<td>Session 8</td>
 <td>Lecture</td>
 <td><a href='#session8'>Markov Chain Monte Carlo</a></td>
 </tr>
 <tr>
-<td>January 15</td>
-<td>AM</td>
+<td>Session 9</td>
 <td>Practical</td>
 <td><a href='#session9'>Sparse Bayesian linear regression</a></td>
 </tr>
 <tr>
-<td>January 18</td>
-<td>AM</td>
+<td>Session 10</td>
 <td>Lecture</td>
 <td><a href='#session10'>Deep generative models</a></td>
 </tr>
 <tr>
-<td>January 22</td>
-<td>AM</td>
+<td>Session 11</td>
 <td>Lecture</td>
 <td><a href='#session11'>Revision and other activities</a></td>
 </tr>
-<tr>
-<td>January 28</td>
-<td>9:30-11:30</td>
-<td>Exam</td>
-<td><br></td>
-</tr>
 </tbody>
 </table>
-
-AM = 8:30-10:00 10:30-12:00
-
-PM = 13:30-15:00 15:15-16:45
-
 
 <a id='session1'></a>
 ## Fundamentals of Bayesian modeling and inference
@@ -129,7 +107,7 @@ Key concepts you should be familiar with at the end of this lecture:
 
 Material:
 
-- [Slides](https://sleglaive.pages.centralesupelec.fr/page/bayesian-ML/session1/slides.html)
+- [Slides](https://sleglaive.github.io/teachings/bayesian_ML/session1/slides.html)
 - [Notebook - Gaussian model with latent mean](session1/python/Gaussian%20model%20with%20latent%20mean%20(solution).ipynb)
 - [Handwritten solution to exercices](session1/solution_exercises.pdf)
 
@@ -147,7 +125,7 @@ Key concepts you should be familiar with at the end of this lecture:
 
 Material:
 
-- [Slides](https://sleglaive.pages.centralesupelec.fr/page/bayesian-ML/session2/slides.html)
+- [Slides](https://sleglaive.github.io/teachings/bayesian_ML/session2/slides.html)
 - [Notebook - Multinomial logistic regression](session2/python/multinomial%20logistic%20regression.ipynb)
 
 <a id='session3'></a>
@@ -165,8 +143,8 @@ Key concepts you should be familiar with at the end of this lecture:
 
 Material:
 
-- [Slides for part 1 - Bayesian networks](https://sleglaive.pages.centralesupelec.fr/page/bayesian-ML/session3a/slides.html)
-- [Slides for part 2 - Inference in latent variable models](https://sleglaive.pages.centralesupelec.fr/page/bayesian-ML/session3b/slides.html)
+- [Slides for part 1 - Bayesian networks](https://sleglaive.github.io/teachings/bayesian_ML/session3a/slides.html)
+- [Slides for part 2 - Inference in latent variable models](https://sleglaive.github.io/teachings/bayesian_ML/session3b/slides.html)
 
 <a id='session4'></a>
 ## Gaussian mixture model
@@ -191,7 +169,7 @@ Key concepts you should be familiar with at the end of this lecture:
 
 Material:
 
-- [Slides](https://sleglaive.pages.centralesupelec.fr/page/bayesian-ML/session5/slides.html)
+- [Slides](https://sleglaive.github.io/teachings/bayesian_ML/session4/slides.html)
 - [Handwritten solution to the EM algorithm](session5/FA.pdf)
 
 <a id='session6'></a>
@@ -206,7 +184,7 @@ Key concepts you should be familiar with at the end of this lecture:
 
 Material:
 
-- [Slides](https://sleglaive.pages.centralesupelec.fr/page/bayesian-ML/session6/slides.html)
+- [Slides](https://sleglaive.github.io/teachings/bayesian_ML/session6/slides.html)
 - [Notebook - Variational inference for the Gaussian model with latent parameters](session6/python/VI%20for%20Gaussian%20model%20with%20latent%20mean%20and%20precision%20(solution).ipynb)
 - [Handwritten solution to exercices](session6/solution_exercises.pdf)
 
@@ -232,7 +210,7 @@ Key concepts you should be familiar with at the end of this lecture:
 
 Material:
 
-- [Slides](https://sleglaive.pages.centralesupelec.fr/page/bayesian-ML/session8/slides.html#1)
+- [Slides](https://sleglaive.github.io/teachings/bayesian_ML/session8/slides.html)
 
 <a id='session9'></a>
 ## Sparse Bayesian linear regression
@@ -258,7 +236,7 @@ Key concepts you should be familiar with at the end of this lecture:
 
 Material:
 
-- [Slides](https://sleglaive.pages.centralesupelec.fr/page/bayesian-ML/session10/slides.html)
+- [Slides](https://sleglaive.github.io/teachings/bayesian_ML/session10/slides.html)
 - [Notebook - Variational autoencoder in PyTorch](session10/python/VAE.ipynb)
 - [utils.py](session10/python/utils.py)
 
@@ -267,11 +245,9 @@ Material:
 
 **Activity 1**: Q&A session
 
-**Activity 2**: You will find an exercise [here](session11/revisions.pdf). You will also find exercices (that were left as homeworks) in the slides of the different lectures.
+**Activity 2**: You will find exercises [here](session11). You will also find exercices (that were left as homeworks) in the slides of the different lectures.
 
-**Activity 3**: If not finished yet, you can continue working on the sparse Bayesian linear regression notebook (the deadline to send your report is tonight).
-
-**Activity 4**: Reading about sequential data processing with latent-variable models.
+**Activity 3**: Reading about sequential data processing with latent-variable models.
 
 "State-space models (SSM) provide a general and flexible methodology for sequential data modelling. They were first introduced in the 1960s, with the seminal work of Kalman and were soon used in the Apollo Project to estimate the trajectory of the spaceships that were bringing men to the moon. Since then, they have become a standard tool for time series analysis in many areas well beyond aerospace engineering. In the machine learning community in particular, they are used as generative models for sequential data, for predictive modelling, state inference and representation learning". *Quote from Marco Fraccaro's Ph.D Thesis entitled "Deep Latent Variable Models for Sequential Data" and defended at Technical University of Denmark in 2018.*
 

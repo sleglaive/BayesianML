@@ -33,7 +33,7 @@ class: center, middle
 <br/>
 
 <br/><br/>
-.tiny[CentraleSupélec, 2020-2021]
+.tiny[CentraleSupélec]
   
 
 ---
@@ -161,10 +161,6 @@ class: middle
 - Various Monte Carlo methods aim to provide techniques for this.
 
 ---
-class: middle, center
-### Importance sampling
-
----
 class: middle
 
 Two potential reasons for the Monte Carlo method to fail:
@@ -177,9 +173,17 @@ Two potential reasons for the Monte Carlo method to fail:
   are most of the time very low. Thus the effective sample size can be much smaller than the apparent sample size $N$.
 
 ---
+class: middle, center
+### Importance sampling
+
+Let's assume that sampling from $p(\mathbf{x})$ is difficult or impossible.
+
+.left.footnote[The word "sampling" is a bit misleading as this method does not provide samples from the target distribution, it can only be used to approximate expectations.]
+
+---
 class: middle
 
-In that cases, we note that:
+We have
 
 $$
 \begin{aligned}
@@ -410,13 +414,13 @@ Inverse transform sampling consists in:
 1. Generating ${\displaystyle u \sim \mathcal{U}([0,1])}$
 2. Computing ${\displaystyle x=F\_{x}^{-1}(u)}$. 
 
-Note that for some distributions (including the Gaussian), we cannot invert the CDF.
+.footnote[For several common distributions (including the Gaussian), we cannot compute the inverse CDF analytically. <br/> For the Gaussian, we have extremely accurate approximations using moderate-degree polynomials.]
 
 ]
 
 .right-column[
 
-.center.width-80[![](images/ITS.gif)]
+.center.width-70[![](images/ITS.gif)]
 
 ]
 
@@ -429,7 +433,7 @@ Note that for some distributions (including the Gaussian), we cannot invert the 
 
 ---
 class: middle
-### Change of variable
+### Density transformation
 
 Let $x$ be a real-valued random variable with pdf $p(x)$. 
 
@@ -517,6 +521,7 @@ class: middle, center
 ---
 class: middle
 
+.medium[
 ```
 import numpy as np
 import scipy.stats as st
@@ -557,6 +562,7 @@ plt.xlim([-50, 150])
 
 
 ```
+]
 
 
 
@@ -564,6 +570,8 @@ plt.xlim([-50, 150])
 class: middle
 count: false
 
+.medium[
+
 ```
 import numpy as np
 import scipy.stats as st
@@ -604,6 +612,7 @@ plt.xlim([-50, 150])
 
 
 ```
+]
 
 .credit[https://wiseodd.github.io/techblog/2015/10/21/rejection-sampling/]
 
@@ -621,7 +630,7 @@ class: middle
 
 ]
 
-Rejection sampling can be easily extended for sampling from distributions with unknown normalizing constant, i.e. when we can only evaluate $\phi(x)$ with $\displaystyle p(x) = \frac{1}{Z} \phi(x)$.
+<!-- Rejection sampling can be easily extended for sampling from distributions with unknown normalizing constant, i.e. when we can only evaluate $\phi(x)$ with $\displaystyle p(x) = \frac{1}{Z} \phi(x)$. -->
 
 ---
 class: middle
@@ -682,14 +691,16 @@ class: middle
 
 ### Stationary distribution
 
-$\pi$ is a stationary distribution for the Markov chain defined by the transition distribution $p(x | x')$ if
+$\pi$ is a stationary distribution for the Markov chain defined by the transition distribution $p(x\_n | x\_{n-1})$ if
 
-$$ \pi(x) = \int p(x | x') \pi(x') dx'. $$
+$$ \pi(x\_n) = \int p(x\_n | x\_{n-1}) \pi(x\_{n-1}) dx\_{n-1}. $$
 
 
 .footnote[
   
-Interpretation: The above formula is an expectation. Draw a sample $x' \sim \pi$, use the transition distribution to get a sample $x \sim p(x | x')$, repeat this process infitely many times and average. If you end up with a variable distributed as $\pi$ then it means that it is a stationary distribution for the Markov chain : we started from $\pi$, moved through the Markov chain, and arrived to $\pi$ again. 
+Interpretation using ancestral sampling: 
+
+Draw a sample $x' \sim \pi$, use the transition distribution to get a sample $x \sim p(x | x')$, repeat this process many times. If the empirical distribution of the samples $x$ corresponds to $\pi$ it means that $\pi$ is a stationary distribution for the Markov chain: we started from $\pi$, moved through the Markov chain, and arrived to $\pi$ again. 
 ]
 
 ---
@@ -714,9 +725,9 @@ class: middle
 ---
 class: middle
 
-Instead, we have a sequence of marginal distributions generally defined by .tiny[(with slightly different notations, but this is just the sum and product rules as in the previous slide)]:
+Instead, we have a **sequence of marginal distributions** generally defined by:
 
-$$ \pi\_n(x) = \int p(x | x') \pi_{n-1}(x') dx'.$$
+$$ \pi\_n(x\_n) = \int p(x\_n | x\_{n-1}) \pi\_{n-1}(x\_{n-1}) dx\_{n-1}.$$
 
 
 Does this sequence of distributions converge and, if so, what does it converge
@@ -727,7 +738,7 @@ class: middle
 
 
 .center.block-center-80[
-**A key result is that for an ergodic Markov chain there exists a unique stationary distribution $\pi$ to which all the marginal distributions $\pi\_n(x)$ converge, irrespective of the initial distribution $\pi\_0(x)$.**
+**A key result is that for an ergodic Markov chain there exists a unique stationary distribution $\pi$ to which all the marginal distributions $\pi\_n$ converge, irrespective of the initial distribution $\pi\_0$.**
 ]
 
 .vspace[
@@ -741,7 +752,7 @@ Defining these properties is out of the scope of this lecture.
 ---
 class: middle
 
-- The previous discussion suggests that, if we can design a transition distribution $p(x | x')$ such that the target $\pi(x)$ is its stationary distribution, at least in principle we can generate samples from the Markov chain that eventually will tend to be drawn from the target distribution.
+- The previous discussion suggests that, if we can design a transition distribution $p(x\_n | x\_{n-1})$ such that the target $\pi$ is its stationary distribution, at least in principle we can generate samples from the Markov chain that eventually will tend to be drawn from the target distribution.
 
 - After ignoring samples obtained from an initial "burn in" period, as the chain moves towards the stationary distribution, the generated samples can be subsequently used to estimate expectations under the target distribution, as if they are independent.
 
@@ -757,7 +768,7 @@ class: middle
 
 If the transition distribution of the Markov chain satisfies
 
-$$ p(x' | x) \pi(x) = p(x | x') \pi(x') $$
+$$ p(x\_{n-1} | x\_n) \pi(x\_n) = p(x\_n | x\_{n-1}) \pi(x\_{n-1}) $$
 
 then $\pi$ is a stationary distribution.
 
@@ -768,7 +779,7 @@ then $\pi$ is a stationary distribution.
 Proof: Integrating on both sides we have
 $$
 \begin{aligned}
-\pi(x) = \int p(x' | x) \pi(x) d x' &= \int p(x | x') \pi(x') d x'
+\pi(x\_n) = \int p(x\_{n-1} | x\_n) \pi(x\_n) d x\_{n-1} &= \int p(x\_n | x\_{n-1}) \pi(x\_{n-1}) d x\_{n-1}
 \end{aligned}
 $$
 
@@ -845,7 +856,7 @@ Given an arbitrary initial sample $x\_0$, the Metropolis-Hastings (MH) algorithm
 
 - Sample $u$ from the uniform distribution $\mathcal{U}([0,1])$. 
 
-- If $u < \alpha(x\_n \rightarrow x\_n')$, accept the sample and set
+- If $u < \alpha(x\_n', x\_{n-1})$, accept the sample and set
 
   $$ x\_n = x\_n', $$
 
