@@ -1,4 +1,4 @@
-# Bayesian Methods for Machine Learning (2020/2021)
+# Bayesian Methods for Machine Learning (2021/2022)
 
 Course given by [Simon Leglaive](https://sleglaive.github.io/) at [CentraleSupélec](https://www.centralesupelec.fr/en/).
 
